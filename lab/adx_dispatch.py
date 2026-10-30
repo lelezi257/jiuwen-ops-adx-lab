@@ -165,6 +165,8 @@ def release_terminal(cid):
         binding = case.get("execution_binding")
         if not binding or binding.get("allocation_state") == "RELEASED":
             return case
+        case["cleanup"] = {"state": "REQUESTED", "requested_at": now(), "reason": "operator terminal reconciliation"}
+        control.save(case)
     with client() as http:
         observed = http.get(binding_path(case))
         if observed.status_code == 200:

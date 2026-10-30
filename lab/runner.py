@@ -1,14 +1,12 @@
 """Official Process SDK host. Contains no replacement model/agent loop."""
 import asyncio,json,os,sys,time
-from contextlib import asynccontextmanager
 from pathlib import Path
 import httpx
-from fastapi import FastAPI
-from lab.common import secret,headers,DATA
+from lab.common import DATA
 from lab.tools import READ,WRITE,RESULT
 from jiuwenswarm_sdk import Client
 from lab.execution_context import grant
-CONTROL='http://control:8080';capability=None;worker_error=None
+CONTROL='http://172.29.0.254:8082'
 
 def configured():return all(os.getenv(x,'').strip() for x in ['API_BASE','API_KEY','MODEL_NAME'])
 def client():return Client(command=[sys.executable,'-m','jiuwenswarm.channels.process_cli.main'],cwd='/data',env={'JIUWENSWARM_DATA_DIR':'/data/swarm','JIUWENSWARM_CONFIG_DIR':'/data/swarm/config'})
@@ -86,24 +84,3 @@ async def execute(case):
     if retry==3:raise
     await asyncio.sleep(2**retry)
  finally:task.cancel()
-
-async def loop():
- global capability,worker_error
- while True:
-  try:
-   if capability is None:
-    result=await client().query('protocol.capabilities',deadline_seconds=90)
-    if result['status']!='completed' or not all(result['data']['features'].get(x) for x in ['host_tools','structured_output','empty_tools','max_turns','cancel']):raise RuntimeError('Official CLI missing required features')
-    capability=result['data'];(DATA/'capabilities.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
-   if configured():
-    case=await api('/internal/claim',{})
-    if case:await execute(case)
-   worker_error=None
-  except Exception as exc:worker_error=type(exc).__name__+': '+str(exc)[:500]
-  await asyncio.sleep(3)
-@asynccontextmanager
-async def lifespan(app):
- task=asyncio.create_task(loop());yield;task.cancel()
-app=FastAPI(lifespan=lifespan)
-@app.get('/health')
-def health():return {'ok':capability is not None,'model_configured':configured(),'state':'READY' if configured() and capability else 'WAITING_MODEL' if capability else 'CHECKING_SDK','protocol_revision':capability.get('protocol_revision') if capability else None,'error':worker_error,'engine':'official Process SDK -> official Swarm CLI/Runtime -> Core','fake_model':False,'model_name':os.getenv('MODEL_NAME','')}

@@ -1,0 +1,1153 @@
+{
+  "case": {
+    "id": "case-f9499998ff724bd3",
+    "state": "RESOLVED_FIXED",
+    "phase": "verify",
+    "attempt": 4,
+    "observed_release": "fault-release-3a876af6d22d4ec8",
+    "observed_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+    "created_at": 1793370589.5630808,
+    "updated_at": 1793372963.4946027,
+    "sdk_runs": {
+      "attempt-c4541f54d6bf452d": {
+        "attempt_id": "attempt-c4541f54d6bf452d",
+        "phase": "repair",
+        "session_id": "process_cli_1a18d37b780_fd6e9845c4ca",
+        "request_id": "02efae54-4696-48b7-8ad6-73d22d3806b5",
+        "started_at": 1793370601.3868716,
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      },
+      "attempt-beecc2ff529f4531": {
+        "attempt_id": "attempt-beecc2ff529f4531",
+        "phase": "repair",
+        "session_id": "process_cli_1a18d3a30ee_39155b46cc85",
+        "request_id": "ef69f59f-14b4-46ea-8620-50d454d3b254",
+        "started_at": 1793370763.5565488,
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      },
+      "attempt-96783f18fbe2409d": {
+        "attempt_id": "attempt-96783f18fbe2409d",
+        "phase": "verify",
+        "session_id": "process_cli_1a18d544e54_f231267d4e01",
+        "request_id": "041e837d-4af1-47ca-85f8-fc220d42094d",
+        "started_at": 1793372475.0044918,
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      },
+      "attempt-f9d5c199738b4fc2": {
+        "attempt_id": "attempt-f9d5c199738b4fc2",
+        "phase": "verify",
+        "session_id": "process_cli_1a18d5b5f08_60aca456955e",
+        "request_id": "c5a9bb49-d249-4ed1-a035-766dd3ef08a6",
+        "started_at": 1793372938.030388,
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      }
+    },
+    "execution_binding": {
+      "incarnation": 1,
+      "template": "ops-order",
+      "template_version": "5",
+      "binding_id": "case-f9499998ff724bd3-e1",
+      "allocation_state": "RELEASED",
+      "recording_root_id": "case-f9499998ff724bd3",
+      "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26",
+      "released_at": 1793372963.4939232
+    },
+    "binding_history": [
+      {
+        "incarnation": 1,
+        "template": "ops-order",
+        "template_version": "5",
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "allocation_state": "RELEASED",
+        "recording_root_id": "case-f9499998ff724bd3",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26",
+        "released_at": 1793372963.4939232
+      }
+    ],
+    "cleanup": {
+      "state": "CONFIRMED",
+      "confirmed_at": 1793372963.4939244
+    },
+    "pr": {
+      "number": 1,
+      "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/1",
+      "head_sha": "63b3e8a9bc6ba2cc38b5d84b535e006b53d1222f",
+      "base_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+      "case_id": "case-f9499998ff724bd3"
+    },
+    "ci": {
+      "state": "passed",
+      "run_id": 41072564084,
+      "run_url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41072564084",
+      "test_merge_sha": "c889ba7f0fbb8a435fd1a99f9ac3d3b9436ef59b",
+      "pr": {
+        "number": 1,
+        "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/1",
+        "head_sha": "63b3e8a9bc6ba2cc38b5d84b535e006b53d1222f",
+        "base_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+        "case_id": "case-f9499998ff724bd3"
+      }
+    },
+    "merge": {
+      "state": "merged",
+      "merge_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+      "pr": {
+        "number": 1,
+        "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/1",
+        "head_sha": "63b3e8a9bc6ba2cc38b5d84b535e006b53d1222f",
+        "base_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+        "case_id": "case-f9499998ff724bd3"
+      },
+      "checked": {
+        "state": "passed",
+        "run_id": 41072564084,
+        "run_url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41072564084",
+        "test_merge_sha": "c889ba7f0fbb8a435fd1a99f9ac3d3b9436ef59b",
+        "pr": {
+          "number": 1,
+          "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/1",
+          "head_sha": "63b3e8a9bc6ba2cc38b5d84b535e006b53d1222f",
+          "base_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+          "case_id": "case-f9499998ff724bd3"
+        }
+      }
+    },
+    "build": {
+      "source_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+      "dispatched_at": 1793371025.9275444,
+      "state": "ready",
+      "run_id": 41073187806,
+      "run_url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41073187806",
+      "image_digest": "localhost:5000/jiuwen-adx-order@sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a",
+      "artifact_id": 12986421377,
+      "provenance": {
+        "source_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+        "architecture": "arm64",
+        "archive_sha256": "defea5970952e9efa206cc3d8e87c8492176c43727aa81f9d45f74588213bf14",
+        "run_id": "41073187806"
+      }
+    },
+    "deployment": {
+      "runtime": {
+        "container_id": "dec4916f165b7ce4b7e682fbb8b30611430b7201d1fa63191eec2754583ac92d",
+        "image_id": "sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a",
+        "repo_digests": [
+          "order-build@sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a",
+          "localhost:5000/jiuwen-adx-order@sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a"
+        ],
+        "source_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+        "running": true,
+        "release_id": "release-case-f9499998ff724bd3"
+      },
+      "ledger": {
+        "release_id": "release-case-f9499998ff724bd3",
+        "source_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+        "image_digest": "localhost:5000/jiuwen-adx-order@sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a",
+        "previous": {
+          "release_id": "fault-release-3a876af6d22d4ec8",
+          "source_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+          "image_digest": "localhost:5000/jiuwen-adx-order@sha256:7aa8aafab706bb4d5684660c0a3cbd3a0717e3684fe90205abcc439170890b8f",
+          "previous": {
+            "release_id": "release-baseline",
+            "source_sha": "ca9ce7dcc7026b645e2bb1e3588c3b0ecf716ff2",
+            "image_digest": "localhost:5000/jiuwen-adx-order@sha256:7f48d4541fccde30776ae4ce17ab3bd4e4fbec894e97bdbdcaadbe8963b957ab",
+            "state": "ready",
+            "time": 1793370443.785453
+          },
+          "state": "ready",
+          "time": 1793370554.7560735
+        },
+        "state": "ready",
+        "time": 1793372343.7677534
+      },
+      "known_good": {
+        "release_id": "release-baseline",
+        "source_sha": "ca9ce7dcc7026b645e2bb1e3588c3b0ecf716ff2",
+        "image_digest": "localhost:5000/jiuwen-adx-order@sha256:7f48d4541fccde30776ae4ce17ab3bd4e4fbec894e97bdbdcaadbe8963b957ab",
+        "state": "ready",
+        "time": 1793370443.785453,
+        "verification_id": "verify-ce293cc96ad1431d",
+        "verified_at": 1793370444.015701
+      },
+      "consistent": true
+    },
+    "verification": {
+      "verification_id": "verify-7a52d6e4d4304f02",
+      "release_id": "release-case-f9499998ff724bd3",
+      "expected_source_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+      "expected_image_digest": "localhost:5000/jiuwen-adx-order@sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a",
+      "passed": true,
+      "old_order_ok": true,
+      "invalid_input_ok": true,
+      "contract": {
+        "seconds": 60,
+        "windows": 2,
+        "minimum_per_path": 30
+      },
+      "started_at": 1793372348.830404,
+      "finished_at": 1793372469.1665926,
+      "windows": [
+        {
+          "start": 1793372348.8457086,
+          "end": 1793372408.9965608,
+          "counts": {
+            "coupon": 109,
+            "no_coupon": 109
+          },
+          "passed": true,
+          "failed_requests": 0,
+          "database_rows_match": true,
+          "samples": [
+            {
+              "path": "no_coupon",
+              "status": 200,
+              "elapsed_ms": 5.59,
+              "ok": true,
+              "expected_total_cents": 20000,
+              "order_id": "92e614eb94054817bcdf6e2dae7e325a",
+              "total_cents": 20000,
+              "persisted": {
+                "id": "92e614eb94054817bcdf6e2dae7e325a",
+                "quantity": 2,
+                "coupon": null,
+                "total_cents": 20000
+              },
+              "database_row": [
+                "92e614eb94054817bcdf6e2dae7e325a",
+                2,
+                20000
+              ]
+            },
+            {
+              "path": "coupon",
+              "status": 200,
+              "elapsed_ms": 5.54,
+              "ok": true,
+              "expected_total_cents": 18000,
+              "order_id": "dbba4a3c9074415895fc5faa25a1ba13",
+              "total_cents": 18000,
+              "persisted": {
+                "id": "dbba4a3c9074415895fc5faa25a1ba13",
+                "quantity": 2,
+                "coupon": "SAVE10",
+                "total_cents": 18000
+              },
+              "database_row": [
+                "dbba4a3c9074415895fc5faa25a1ba13",
+                2,
+                18000
+              ]
+            }
+          ]
+        },
+        {
+          "start": 1793372408.9965637,
+          "end": 1793372469.1585402,
+          "counts": {
+            "coupon": 109,
+            "no_coupon": 109
+          },
+          "passed": true,
+          "failed_requests": 0,
+          "database_rows_match": true,
+          "samples": [
+            {
+              "path": "no_coupon",
+              "status": 200,
+              "elapsed_ms": 6.44,
+              "ok": true,
+              "expected_total_cents": 20000,
+              "order_id": "40e4e8c690144763ad7888720d4c27f0",
+              "total_cents": 20000,
+              "persisted": {
+                "id": "40e4e8c690144763ad7888720d4c27f0",
+                "quantity": 2,
+                "coupon": null,
+                "total_cents": 20000
+              },
+              "database_row": [
+                "40e4e8c690144763ad7888720d4c27f0",
+                2,
+                20000
+              ]
+            },
+            {
+              "path": "coupon",
+              "status": 200,
+              "elapsed_ms": 4.8,
+              "ok": true,
+              "expected_total_cents": 18000,
+              "order_id": "9181ba38093f49798d6ea636fc8dda8c",
+              "total_cents": 18000,
+              "persisted": {
+                "id": "9181ba38093f49798d6ea636fc8dda8c",
+                "quantity": 2,
+                "coupon": "SAVE10",
+                "total_cents": 18000
+              },
+              "database_row": [
+                "9181ba38093f49798d6ea636fc8dda8c",
+                2,
+                18000
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sdk_receipts": [
+    {
+      "session_id": "process_cli_1a18d37b780_fd6e9845c4ca",
+      "request_id": "02efae54-4696-48b7-8ad6-73d22d3806b5",
+      "status": "completed",
+      "exit_code": 0,
+      "error": null,
+      "usage": {
+        "input_tokens": 340280,
+        "output_tokens": 2837,
+        "total_tokens": 343117,
+        "cache_tokens": 308736,
+        "cache_hit_rate": "90.7%",
+        "total_cost": 0.096073,
+        "model_calls": 13
+      },
+      "needs_human": true
+    },
+    {
+      "session_id": "process_cli_1a18d3a30ee_39155b46cc85",
+      "request_id": "ef69f59f-14b4-46ea-8620-50d454d3b254",
+      "status": "completed",
+      "exit_code": 0,
+      "error": null,
+      "usage": {
+        "input_tokens": 143397,
+        "output_tokens": 1068,
+        "total_tokens": 144465,
+        "cache_tokens": 119552,
+        "cache_hit_rate": "83.4%",
+        "total_cost": 0.04045,
+        "model_calls": 6
+      },
+      "needs_human": false
+    },
+    {
+      "session_id": "process_cli_1a18d544e54_f231267d4e01",
+      "request_id": "041e837d-4af1-47ca-85f8-fc220d42094d",
+      "status": "completed",
+      "exit_code": 0,
+      "error": null,
+      "usage": {
+        "input_tokens": 169939,
+        "output_tokens": 2296,
+        "total_tokens": 172235,
+        "cache_tokens": 80640,
+        "cache_hit_rate": "47.5%",
+        "total_cost": 0.048226,
+        "model_calls": 2
+      },
+      "needs_human": true
+    },
+    {
+      "session_id": "process_cli_1a18d5b5f08_60aca456955e",
+      "request_id": "c5a9bb49-d249-4ed1-a035-766dd3ef08a6",
+      "status": "completed",
+      "exit_code": 0,
+      "error": null,
+      "usage": {
+        "input_tokens": 249584,
+        "output_tokens": 1139,
+        "total_tokens": 250723,
+        "cache_tokens": 161920,
+        "cache_hit_rate": "64.9%",
+        "total_cost": 0.070202,
+        "model_calls": 3
+      },
+      "needs_human": false
+    }
+  ],
+  "tools": [
+    {
+      "name": "query_metrics",
+      "call_id": "4ab6a9c366a641e7be1d4faa362d8858",
+      "evidence_id": "ev-6f24484803ee4e32"
+    },
+    {
+      "name": "query_logs",
+      "call_id": "7ff119b9b9194ce491f52f19c09f277f",
+      "evidence_id": "ev-b7ff2c435ffd46a1"
+    },
+    {
+      "name": "get_running_release",
+      "call_id": "4e5b4da4c6db470883db40bababf994b",
+      "evidence_id": null
+    },
+    {
+      "name": "get_release_diff",
+      "call_id": "4e7ed8544093454eb7c232b563e2e407",
+      "evidence_id": null
+    },
+    {
+      "name": "create_workspace",
+      "call_id": "1a1d4a1bd22b48d19f41aaaf398d6a0d",
+      "evidence_id": null
+    },
+    {
+      "name": "get_diff",
+      "call_id": "eae3f7b784fc4e4ab262e41071c6f835",
+      "evidence_id": null
+    },
+    {
+      "name": "list_source",
+      "call_id": "904c9b9a76aa42de82a065d98f7ce765",
+      "evidence_id": null
+    },
+    {
+      "name": "read_source",
+      "call_id": "46b0d6816583444098ce422a55ed5039",
+      "evidence_id": null
+    },
+    {
+      "name": "read_source",
+      "call_id": "9090e9ad7da74a55942ccbe1ee80cdb8",
+      "evidence_id": null
+    },
+    {
+      "name": "read_source",
+      "call_id": "a2a11f1d7db945f087133429424e8f21",
+      "evidence_id": null
+    },
+    {
+      "name": "write_source",
+      "call_id": "002646a4da774705b05f26d1d3a94086",
+      "evidence_id": null
+    },
+    {
+      "name": "read_source",
+      "call_id": "2c832bc80145412eb07852a4ebefe260",
+      "evidence_id": null
+    },
+    {
+      "name": "write_source",
+      "call_id": "9a3d4ff6e3d04661ab4385e6d8ef1bf7",
+      "evidence_id": null
+    },
+    {
+      "name": "run_tests",
+      "call_id": "21d521d46e5f4e4da9d08b907271220c",
+      "evidence_id": null
+    },
+    {
+      "name": "run_tests",
+      "call_id": "b24c5d1d546743698487494a101057d2",
+      "evidence_id": null
+    },
+    {
+      "name": "run_tests",
+      "call_id": "5687e466a29a42cda2dcbf408432990a",
+      "evidence_id": null
+    },
+    {
+      "name": "get_diff",
+      "call_id": "f8cef7ed75b14b52aa778e865f499696",
+      "evidence_id": null
+    },
+    {
+      "name": "get_running_release",
+      "call_id": "3d7a11a1430f4a5c9a55c2b91e0c252e",
+      "evidence_id": null
+    },
+    {
+      "name": "get_release_diff",
+      "call_id": "b9d01f8365734b78ac4ca1b5c8a18a10",
+      "evidence_id": null
+    },
+    {
+      "name": "query_metrics",
+      "call_id": "4bf9e88a9e9244ba90715893503f170f",
+      "evidence_id": "ev-d5050dd33c374b6c"
+    },
+    {
+      "name": "query_logs",
+      "call_id": "8f12caffd3894f2498d912b9ac7dea68",
+      "evidence_id": "ev-8c4764d89e8d49fd"
+    },
+    {
+      "name": "create_workspace",
+      "call_id": "9645d48250e749f999c05a2619199fce",
+      "evidence_id": null
+    },
+    {
+      "name": "list_source",
+      "call_id": "e890bef14a14431f9bc47592b86045f0",
+      "evidence_id": null
+    },
+    {
+      "name": "get_diff",
+      "call_id": "dd3460f5f7244a849d009271be760b7e",
+      "evidence_id": null
+    },
+    {
+      "name": "run_tests",
+      "call_id": "c4684fc22735420584225f681ed14d83",
+      "evidence_id": null
+    },
+    {
+      "name": "create_pull_request",
+      "call_id": "f7d0574c35394123897967ddadb0e397",
+      "evidence_id": null
+    },
+    {
+      "name": "get_running_release",
+      "call_id": "82ba86e3ce5a48188649a61c1cebe63c",
+      "evidence_id": null
+    },
+    {
+      "name": "query_metrics",
+      "call_id": "5cd38df56dab4a1aac8536f6728dea57",
+      "evidence_id": "ev-c6e497eafedf4b38"
+    },
+    {
+      "name": "query_logs",
+      "call_id": "38cee247bc9b42f1bc31af894bc09d4d",
+      "evidence_id": "ev-761b11d39a9b4d36"
+    },
+    {
+      "name": "get_running_release",
+      "call_id": "f656242117a54428a328a97891f20998",
+      "evidence_id": null
+    },
+    {
+      "name": "get_release_diff",
+      "call_id": "b83b508ce2e04e6383899ee9da5e12db",
+      "evidence_id": null
+    },
+    {
+      "name": "query_metrics",
+      "call_id": "c30603aa1a964cef97dd5d7d978193d1",
+      "evidence_id": "ev-d59526ed21e046a6"
+    },
+    {
+      "name": "query_logs",
+      "call_id": "fe09a88fd946458fbe57d3d39584d2a6",
+      "evidence_id": "ev-238d958041cc4e3e"
+    }
+  ],
+  "recordings": {
+    "ready": true,
+    "sessions": [
+      {
+        "session_id": "process_cli_1a18d37b780_fd6e9845c4ca",
+        "metadata": true,
+        "subjects": 1,
+        "revision": 103,
+        "store_epoch": "795d1649bb2442cb993a43fae313dfed"
+      },
+      {
+        "session_id": "process_cli_1a18d3a30ee_39155b46cc85",
+        "metadata": true,
+        "subjects": 1,
+        "revision": 50,
+        "store_epoch": "c508e18126db48e3b6c0434d581634a8"
+      },
+      {
+        "session_id": "process_cli_1a18d544e54_f231267d4e01",
+        "metadata": true,
+        "subjects": 1,
+        "revision": 20,
+        "store_epoch": "e1065d88b40a4a99ba85719b48fb25f2"
+      },
+      {
+        "session_id": "process_cli_1a18d5b5f08_60aca456955e",
+        "metadata": true,
+        "subjects": 1,
+        "revision": 26,
+        "store_epoch": "ccbc1141df2f40bab0f0b365b9d0993b"
+      }
+    ]
+  },
+  "native_subjects": {
+    "process_cli_1a18d37b780_fd6e9845c4ca": {
+      "schema_version": 1,
+      "session_id": "process_cli_1a18d37b780_fd6e9845c4ca",
+      "items": [
+        {
+          "subject_id": "main",
+          "display_name": "Main Agent",
+          "kind": "main_agent",
+          "parent_id": null,
+          "record_count": 69,
+          "trace_count": 1,
+          "first_start_time_unix_nano": "1793370603435827382",
+          "last_observed_time_unix_nano": "1793370669738890356",
+          "first_revision": 1,
+          "revision": 103,
+          "has_error": true,
+          "running": false
+        }
+      ],
+      "watermark": 103,
+      "store_epoch": "795d1649bb2442cb993a43fae313dfed"
+    },
+    "process_cli_1a18d3a30ee_39155b46cc85": {
+      "schema_version": 1,
+      "session_id": "process_cli_1a18d3a30ee_39155b46cc85",
+      "items": [
+        {
+          "subject_id": "main",
+          "display_name": "Main Agent",
+          "kind": "main_agent",
+          "parent_id": null,
+          "record_count": 33,
+          "trace_count": 1,
+          "first_start_time_unix_nano": "1793370765652943935",
+          "last_observed_time_unix_nano": "1793370795178529943",
+          "first_revision": 1,
+          "revision": 50,
+          "has_error": false,
+          "running": false
+        }
+      ],
+      "watermark": 50,
+      "store_epoch": "c508e18126db48e3b6c0434d581634a8"
+    },
+    "process_cli_1a18d544e54_f231267d4e01": {
+      "schema_version": 1,
+      "session_id": "process_cli_1a18d544e54_f231267d4e01",
+      "items": [
+        {
+          "subject_id": "main",
+          "display_name": "Main Agent",
+          "kind": "main_agent",
+          "parent_id": null,
+          "record_count": 13,
+          "trace_count": 1,
+          "first_start_time_unix_nano": "1793372477013457547",
+          "last_observed_time_unix_nano": "1793372574424083707",
+          "first_revision": 1,
+          "revision": 20,
+          "has_error": true,
+          "running": false
+        }
+      ],
+      "watermark": 20,
+      "store_epoch": "e1065d88b40a4a99ba85719b48fb25f2"
+    },
+    "process_cli_1a18d5b5f08_60aca456955e": {
+      "schema_version": 1,
+      "session_id": "process_cli_1a18d5b5f08_60aca456955e",
+      "items": [
+        {
+          "subject_id": "main",
+          "display_name": "Main Agent",
+          "kind": "main_agent",
+          "parent_id": null,
+          "record_count": 18,
+          "trace_count": 1,
+          "first_start_time_unix_nano": "1793372939995557413",
+          "last_observed_time_unix_nano": "1793372954435379893",
+          "first_revision": 1,
+          "revision": 26,
+          "has_error": false,
+          "running": false
+        }
+      ],
+      "watermark": 26,
+      "store_epoch": "ccbc1141df2f40bab0f0b365b9d0993b"
+    }
+  },
+  "timeline": [
+    {
+      "time": 1793370589.5638723,
+      "kind": "state",
+      "data": {
+        "state": "REPAIR_QUEUED",
+        "detail": "Waiting for runner / real model configuration"
+      }
+    },
+    {
+      "time": 1793370591.4915352,
+      "kind": "state",
+      "data": {
+        "state": "REPAIR_STARTING",
+        "detail": "ADX 按需分配执行环境；尚未开始模型执行"
+      }
+    },
+    {
+      "time": 1793370595.0020785,
+      "kind": "adx.execution.accepted",
+      "data": {
+        "attempt_id": "attempt-c4541f54d6bf452d",
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      }
+    },
+    {
+      "time": 1793370601.3811548,
+      "kind": "state",
+      "data": {
+        "state": "REPAIRING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793370681.681904,
+      "kind": "state",
+      "data": {
+        "state": "NEEDS_HUMAN",
+        "detail": "故障定位：order-api 发布 fault-release-3a876af6d22d4ec8（源码 29ef00e3，运行容器镜像与发布账本一致，consistent=true）相对已知良好版本 release-baseline(ca9ce7dc) 的差异仅一处：apps/order_api/pricing.py 中 total_cents 把 coupon 归一化从 `(coupon or '').strip().upper()` 改成了 `coupon.strip().upper()`。POST /orders 的 coupon 在 Pydantic 模型 Order 中是可选字段（默认 None），因此不带优惠券的创建订单请求会触发 AttributeError: 'NoneType' object has no attribute 'strip'，被记录为 500。证据：Prometheus 2 分钟内 /orders 200 约 167.4 次、/orders 500 约 45.0 次（约 21% 失败），/version 与 /orders/{id} 全部 200，说明故障仅限创单路径；Loki 日志在 source_sha=29ef00e3、release_id=fault-release-3a876af6d22d4ec8 下持续出现 path=/orders status=500 error=AttributeError: 'NoneType' object has no attribute 'strip'，且与 200 请求交替出现，符合可选 coupon 缺失场景。修复：已按最小改动恢复 `(coupon or '').strip().upper()`，空值与空白 coupon 视为无券，SAVE10 判定与非法券 422 语义保持不变；并新增回归测试 tests/order/test_pricing_none_coupon.py，覆盖 coupon=None、空串、纯空白、带空格小写 save10 以及非法券仍抛 ValueError。当前 diff 仅包含该一处业务代码改动与一个新测试文件，未触碰 CI、依赖或部署配置。阻塞点：run_tests 连续三次（test-2bc59aa6da564f7c、test-07882b91c5a248fb、test-47a80b7e0e3e4704）均在构建/启动阶段失败，原因是测试环境无法从 Docker Hub 拉取 postgres:16.9-alpine 镜像（failed to resolve reference ... EOF，docker run 退出码 125），属于基础设施不可用，而非本次修复本身的断言失败，因此尚未获得通过的测试凭证。按照“必须先有通过的验证再提 PR”的原则，我没有创建 PR，需要人工在镜像源恢复后重跑验证并提交，或确认是否允许在无测试凭证情况下提交这个等于回滚到已知良好实现的修复。"
+      }
+    },
+    {
+      "time": 1793370756.8069072,
+      "kind": "state",
+      "data": {
+        "state": "REPAIR_QUEUED",
+        "detail": "Operator requested new attempt; prior attempts retained; no replay of completed delivery"
+      }
+    },
+    {
+      "time": 1793370757.7025423,
+      "kind": "state",
+      "data": {
+        "state": "REPAIR_STARTING",
+        "detail": "ADX 按需分配执行环境；尚未开始模型执行"
+      }
+    },
+    {
+      "time": 1793370757.7338564,
+      "kind": "adx.execution.accepted",
+      "data": {
+        "attempt_id": "attempt-beecc2ff529f4531",
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      }
+    },
+    {
+      "time": 1793370763.5490034,
+      "kind": "state",
+      "data": {
+        "state": "REPAIRING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793370813.4154787,
+      "kind": "state",
+      "data": {
+        "state": "CI_PENDING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793370836.2332616,
+      "kind": "state",
+      "data": {
+        "state": "READY_TO_MERGE",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793370839.8474069,
+      "kind": "state",
+      "data": {
+        "state": "MERGING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793370877.6297312,
+      "kind": "state",
+      "data": {
+        "state": "NEEDS_HUMAN",
+        "detail": "Action requires reconciliation: http://delivery:8080/ops/merge: HTTP 500: Internal Server Error"
+      }
+    },
+    {
+      "time": 1793371008.396514,
+      "kind": "state",
+      "data": {
+        "state": "READY_TO_MERGE",
+        "detail": "Operator rechecked the unchanged open PR and runtime; no SDK/model replay"
+      }
+    },
+    {
+      "time": 1793371008.926947,
+      "kind": "state",
+      "data": {
+        "state": "MERGING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793371019.9494054,
+      "kind": "state",
+      "data": {
+        "state": "BUILDING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793372340.0429595,
+      "kind": "state",
+      "data": {
+        "state": "DEPLOYING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793372345.1692743,
+      "kind": "state",
+      "data": {
+        "state": "VERIFYING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793372469.1827738,
+      "kind": "state",
+      "data": {
+        "state": "VERIFY_AGENT_QUEUED",
+        "detail": "Independent contract passed; new Jiuwen session reads deployment evidence"
+      }
+    },
+    {
+      "time": 1793372469.7367146,
+      "kind": "state",
+      "data": {
+        "state": "VERIFY_STARTING",
+        "detail": "ADX 按需分配执行环境；尚未开始模型执行"
+      }
+    },
+    {
+      "time": 1793372469.909018,
+      "kind": "adx.execution.accepted",
+      "data": {
+        "attempt_id": "attempt-96783f18fbe2409d",
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      }
+    },
+    {
+      "time": 1793372474.998153,
+      "kind": "state",
+      "data": {
+        "state": "VERIFY_AGENT_RUNNING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793372583.3623784,
+      "kind": "state",
+      "data": {
+        "state": "NEEDS_HUMAN",
+        "detail": "验证结论：通过（PASS），修复已在运行环境中得到端到端确认，此前“缺少测试凭证”的阻塞不再成立。\n\n一、发布身份一致性：get_running_release 显示运行容器 image_id=sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a、source_sha=fe17caf809f061f8512101b39b173ecfceded158、release_id=release-case-f9499998ff724bd3，与验证报告 expected_source_sha / expected_image_digest 完全一致，ledger 记录 consistent=true，且 release 链为 release-baseline(ca9ce7dc) → fault-release-3a876af6d22d4ec8(29ef00e3) → 当前修复发布(fe17caf8)，即当前验证对象确实是在故障版本之上叠加的修复版本，不是回滚到 baseline 的镜像。\n\n二、独立验证报告（verify-7a52d6e4d4304f02）：契约要求 2 个窗口 × 60s、每条路径至少 30 次请求，实际两个窗口各命中 coupon 109 + no_coupon 109（合计 218 + 218），远超下限；全部请求 status=200，无一条失败。语义校验全部成立：no_coupon 请求 expected_total_cents=20000 且实测 total_cents=20000、persisted.coupon=null、database_row 落库一致；coupon=SAVE10 请求 expected_total_cents=18000 且实测 18000、persisted.coupon=SAVE10、落库一致；old_order_ok=true（历史订单读取正常）、invalid_input_ok=true（非法券仍走 422，未被“宽松放过”）；before/after 的 source_sha 与 image_digest 与账本一致，passed=true。这说明 coupon 归一化对 None 的处理已恢复，且没有把非法券校验一并放宽。\n\n三、当前指标佐证：Prometheus 近 2 分钟 order_requests_total 为 /orders 200≈329.74、/version 200≈222.26、/orders/{id} 200≈330.78、/orders 422=0，/orders 已无 500 分档，故障期“约 21% 创单 500”的现象消失。需说明：422 计数为 0 属于压测流量只覆盖合法与无券场景，非法券语义由验证报告的 invalid_input_ok 单独覆盖，二者不矛盾。\n\n四、日志佐证：Loki 最近 5 分钟 order-api 全部记录均为 source_sha=fe17caf809f061f8512101b39b173ecfceded158、release_id=release-case-f9499998ff724bd3 下的 /orders、/orders/{id}、/version 200，error 字段为 null，未再出现 AttributeError: 'NoneType' object has no attribute 'strip'。\n\n五、遗留不一致/待人工处理项：(1) get_release_diff 宿主工具本次调用失败（Host tool callback failed），因此我无法独立复核“相对 baseline 仅 pricing.py 中 total_cents 的 coupon 归一化一处差异、且修复为最小改动回退”这一结论，该点目前仅有上一轮自述与验证报告的行为证据支撑，建议在通道恢复后补读源码 diff 留痕；(2) 本轮 pr_number 与 candidate_sha 均为空，即修复尚未形成待合并的 PR/候选提交，虽然部署侧验证已通过，但要把该修复真正落库仍需人工创建 PR 并把与单元测试镜像拉取相关的 CI 基础设施问题（postgres:16.9-alpine 无法从 Docker Hub 拉取）单独跟进，不要把它当成代码缺陷阻塞。综合以上两点，置 needs_human=true。"
+      }
+    },
+    {
+      "time": 1793372932.1486259,
+      "kind": "state",
+      "data": {
+        "state": "VERIFY_AGENT_QUEUED",
+        "detail": "Operator requested new attempt; prior attempts retained; no replay of completed delivery"
+      }
+    },
+    {
+      "time": 1793372933.0149415,
+      "kind": "state",
+      "data": {
+        "state": "VERIFY_STARTING",
+        "detail": "ADX 按需分配执行环境；尚未开始模型执行"
+      }
+    },
+    {
+      "time": 1793372933.2011437,
+      "kind": "adx.execution.accepted",
+      "data": {
+        "attempt_id": "attempt-f9d5c199738b4fc2",
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26"
+      }
+    },
+    {
+      "time": 1793372938.022974,
+      "kind": "state",
+      "data": {
+        "state": "VERIFY_AGENT_RUNNING",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793372962.9122102,
+      "kind": "state",
+      "data": {
+        "state": "RESOLVED_FIXED",
+        "detail": null
+      }
+    },
+    {
+      "time": 1793372963.4981024,
+      "kind": "adx.environment.released",
+      "data": {
+        "incarnation": 1,
+        "template": "ops-order",
+        "template_version": "5",
+        "binding_id": "case-f9499998ff724bd3-e1",
+        "allocation_state": "RELEASED",
+        "recording_root_id": "case-f9499998ff724bd3",
+        "environment_id": "adx-61356fa4-2ae1-4551-82f8-523a5ba69a26",
+        "released_at": 1793372963.4939232
+      }
+    }
+  ],
+  "experiment": {
+    "id": "experiment-f63f7666bf0541f5",
+    "created_at": 1793370443.509994,
+    "updated_at": 1793372469.180367,
+    "baseline": {
+      "verification_id": "verify-ce293cc96ad1431d",
+      "release_id": "release-baseline",
+      "expected_source_sha": "ca9ce7dcc7026b645e2bb1e3588c3b0ecf716ff2",
+      "expected_image_digest": "localhost:5000/jiuwen-adx-order@sha256:7f48d4541fccde30776ae4ce17ab3bd4e4fbec894e97bdbdcaadbe8963b957ab",
+      "started_at": 1793370443.8203506,
+      "finished_at": 1793370443.9415877,
+      "passed": true,
+      "old_order_ok": true,
+      "invalid_input_ok": true,
+      "contract": {
+        "seconds": 0,
+        "windows": 1,
+        "minimum_per_path": 2,
+        "mode": "quick_baseline",
+        "rounds": 2
+      },
+      "examples": [
+        {
+          "path": "no_coupon",
+          "status": 200,
+          "order_id": "a13448d0558847b08e017188dcafc4de",
+          "total_cents": 20000,
+          "expected_total_cents": 20000,
+          "database_row": [
+            "a13448d0558847b08e017188dcafc4de",
+            2,
+            20000
+          ],
+          "ok": true
+        },
+        {
+          "path": "coupon",
+          "status": 200,
+          "order_id": "711ef0e92d184b13ac9f54693fe6f58a",
+          "total_cents": 18000,
+          "expected_total_cents": 18000,
+          "database_row": [
+            "711ef0e92d184b13ac9f54693fe6f58a",
+            2,
+            18000
+          ],
+          "ok": true
+        }
+      ],
+      "windows": [
+        {
+          "start": 1793370443.832071,
+          "end": 1793370443.9289975,
+          "counts": {
+            "coupon": 2,
+            "no_coupon": 2
+          },
+          "passed": true,
+          "failed_requests": 0,
+          "database_rows_match": true
+        }
+      ]
+    },
+    "fault": {
+      "observation_id": "observation-f82714069c624a8d",
+      "started_at": 1793370556.153587,
+      "observed_at": 1793370556.2043025,
+      "state": "UNHEALTHY",
+      "version": {
+        "source_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+        "release_id": "fault-release-3a876af6d22d4ec8",
+        "image_digest": "localhost:5000/jiuwen-adx-order@sha256:7aa8aafab706bb4d5684660c0a3cbd3a0717e3684fe90205abcc439170890b8f"
+      },
+      "version_before": {
+        "source_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+        "release_id": "fault-release-3a876af6d22d4ec8",
+        "image_digest": "localhost:5000/jiuwen-adx-order@sha256:7aa8aafab706bb4d5684660c0a3cbd3a0717e3684fe90205abcc439170890b8f"
+      },
+      "version_stable": true,
+      "requests": [
+        {
+          "path": "no_coupon",
+          "status": 500,
+          "elapsed_ms": 1.43,
+          "ok": false,
+          "expected_total_cents": 20000,
+          "response_excerpt": "Internal Server Error"
+        },
+        {
+          "path": "coupon",
+          "status": 200,
+          "elapsed_ms": 5.14,
+          "ok": true,
+          "expected_total_cents": 18000,
+          "order_id": "d3664d0491494eeabc42e7128ea0dbc4",
+          "total_cents": 18000,
+          "persisted": {
+            "id": "d3664d0491494eeabc42e7128ea0dbc4",
+            "quantity": 2,
+            "coupon": "SAVE10",
+            "total_cents": 18000
+          },
+          "database_row": [
+            "d3664d0491494eeabc42e7128ea0dbc4",
+            2,
+            18000
+          ]
+        }
+      ],
+      "source": "real HTTP orders + readback + PostgreSQL SELECT"
+    },
+    "recovery": {
+      "verification_id": "verify-7a52d6e4d4304f02",
+      "release_id": "release-case-f9499998ff724bd3",
+      "expected_source_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+      "expected_image_digest": "localhost:5000/jiuwen-adx-order@sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a",
+      "started_at": 1793372348.830404,
+      "finished_at": 1793372469.1665926,
+      "passed": true,
+      "old_order_ok": true,
+      "invalid_input_ok": true,
+      "contract": {
+        "seconds": 60,
+        "windows": 2,
+        "minimum_per_path": 30
+      },
+      "examples": [
+        {
+          "path": "no_coupon",
+          "status": 200,
+          "order_id": "92e614eb94054817bcdf6e2dae7e325a",
+          "total_cents": 20000,
+          "expected_total_cents": 20000,
+          "database_row": [
+            "92e614eb94054817bcdf6e2dae7e325a",
+            2,
+            20000
+          ],
+          "ok": true
+        },
+        {
+          "path": "coupon",
+          "status": 200,
+          "order_id": "dbba4a3c9074415895fc5faa25a1ba13",
+          "total_cents": 18000,
+          "expected_total_cents": 18000,
+          "database_row": [
+            "dbba4a3c9074415895fc5faa25a1ba13",
+            2,
+            18000
+          ],
+          "ok": true
+        }
+      ],
+      "windows": [
+        {
+          "start": 1793372348.8457086,
+          "end": 1793372408.9965608,
+          "counts": {
+            "coupon": 109,
+            "no_coupon": 109
+          },
+          "passed": true,
+          "failed_requests": 0,
+          "database_rows_match": true
+        },
+        {
+          "start": 1793372408.9965637,
+          "end": 1793372469.1585402,
+          "counts": {
+            "coupon": 109,
+            "no_coupon": 109
+          },
+          "passed": true,
+          "failed_requests": 0,
+          "database_rows_match": true
+        }
+      ]
+    },
+    "baseline_operation": "operation-4e47f28fcac643fd",
+    "fault_operation": "operation-d3ee878144e0484d",
+    "fault_release": "fault-release-3a876af6d22d4ec8",
+    "fault_source_sha": "29ef00e3f6e2ff6ecf5b0381c9f28a3c13d924b4",
+    "fault_published_at": 1793370556.096684,
+    "case_id": "case-f9499998ff724bd3"
+  },
+  "authorship": {
+    "case_id": "case-f9499998ff724bd3",
+    "candidate_sha": "63b3e8a9bc6ba2cc38b5d84b535e006b53d1222f",
+    "pr": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/1",
+    "real_sdk_write_matches_github": [
+      {
+        "path": "apps/order_api/pricing.py",
+        "sdk_write_sha256": "3509e6fc7480c2693bc6371350838e88979d9ea121b4ccca29f997ec78afd589",
+        "github_content_sha256": "3509e6fc7480c2693bc6371350838e88979d9ea121b4ccca29f997ec78afd589",
+        "matches": true
+      },
+      {
+        "path": "tests/order/test_pricing_none_coupon.py",
+        "sdk_write_sha256": "1e07e59a17017fb360a4c3a587dcfaeb0fc8b8483518be18cb5e7c63704a65c3",
+        "github_content_sha256": "1e07e59a17017fb360a4c3a587dcfaeb0fc8b8483518be18cb5e7c63704a65c3",
+        "matches": true
+      }
+    ],
+    "meaning": "Actual model-requested write_source bytes match the PR; no repair patch was authored by the operator"
+  },
+  "artifact_download": {
+    "run_id": 41073187806,
+    "artifact_id": 12986421377,
+    "architecture": "arm64",
+    "source_sha": "fe17caf809f061f8512101b39b173ecfceded158",
+    "archive_bytes": 59331138,
+    "github_archive_digest": "sha256:38a97d6f4a3905f8819d8d4241b16936c674d6e693c62ac0f14e2d06bd57ab0e",
+    "download_seconds": 565.77,
+    "method": "real GitHub artifact; parallel verified byte ranges; authoritative digest-checked private cache",
+    "platform_state_before_switch": "BUILDING",
+    "not_agent_model_execution": true
+  },
+  "observer_check": {
+    "session_id": "process_cli_1a18d5b5f08_60aca456955e",
+    "checks": {
+      "actual_session_metadata": true,
+      "chat.send_rejected": true,
+      "config.set_rejected": true,
+      "session.delete_rejected": true,
+      "invalid_session_rejected": true,
+      "hint_matches_native_store": true,
+      "negative_revision_rejected": true,
+      "foreign_origin_rejected": true,
+      "foreign_websocket_rejected": true,
+      "observer_has_no_execution_credentials": true
+    },
+    "native_hints": [
+      {
+        "session_id": "process_cli_1a18d5b5f08_60aca456955e",
+        "trace_id": "826b890d8f55c92b7d12646df91eb217",
+        "revision": 26,
+        "frame_seq": 0,
+        "store_epoch": "ccbc1141df2f40bab0f0b365b9d0993b"
+      }
+    ],
+    "passed": true
+  },
+  "sandbox_after_release": [],
+  "sandbox_list_evidence": "ID          STATUS      RUNTIME     AGE         CREATED\n",
+  "qualification_scope": "Real minimal SDK/native observation and full order recovery PASS after explicitly recorded environment, transport and review-context fixes/retries; not unattended production qualification."
+}

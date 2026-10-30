@@ -24,13 +24,24 @@ def build_options():
 def gh(method,path,body=None):
  token=secret('github_token')
  if not token:raise HTTPException(409,'GitHub credential not configured')
- with httpx.Client(timeout=45) as c:
-  r=c.request(method,'https://api.github.com/repos/'+REPO+path,json=body,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+ with httpx.Client(timeout=httpx.Timeout(20,connect=10)) as c:
+  for attempt in range(2):
+   try:
+    r=c.request(method,'https://api.github.com/repos/'+REPO+path,json=body,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+    break
+   except httpx.TransportError as exc:
+    # Read retry cannot repeat a merge/dispatch/PR write. Unknown writes stop.
+    if method!='GET' or attempt:
+     raise HTTPException(502,'GitHub transport '+type(exc).__name__+'; reconcile existing effects before retrying a write')
+    time.sleep(.5)
   if r.status_code>=400:raise RuntimeError('GitHub '+path+': HTTP '+str(r.status_code)+' '+r.text[:500])
   return r.json() if r.content else {}
-def repository():
+def repository(required=()):
  if not CACHE.exists():cmd(['git','clone','--no-checkout',REMOTE,str(CACHE)],timeout=180)
- cmd(['git','fetch','origin','--prune'],CACHE,180);return CACHE
+ for sha in required:require_sha(sha)
+ if not required or any(subprocess.run(['git','cat-file','-e',sha+'^{commit}'],cwd=CACHE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode for sha in required):
+  cmd(['git','fetch','origin','--prune'],CACHE,180)
+ return CACHE
 
 def inspect():
  r=json.loads(cmd(['docker','inspect',CONTAINER]))[0];image=json.loads(cmd(['docker','image','inspect',r['Image']]))[0]
@@ -67,7 +78,7 @@ def check_changes(root,base):
  return changes
 
 def assert_trusted(sha):
- root=repository();trust=os.environ['LAB_TRUST_SHA'];require_sha(trust)
+ trust=os.environ['LAB_TRUST_SHA'];require_sha(trust);root=repository(required=(sha,trust))
  for path in TRUSTED:
   if cmd(['git','rev-parse',sha+':'+path],root)!=cmd(['git','rev-parse',trust+':'+path],root):raise HTTPException(409,'Trusted CI/build definition changed: '+path)
 
@@ -81,7 +92,11 @@ def tool(name:str,args:dict):
  with lock:
   if name=='get_running_release':return current()
   if name=='get_release_diff':
-   root=repository();a=get('release','good');b=current()['runtime']['source_sha'];return {'base_sha':a['source_sha'] if a else None,'running_sha':b,'diff':cmd(['git','diff',(a['source_sha'] if a else b),b,'--','apps/order_api'],root)[:30000]}
+   a=get('release','good');b=current()['runtime']['source_sha'];base=a['source_sha'] if a else b
+   root=repository(required=(base,b,c['observed_sha']))
+   result={'base_sha':base,'running_sha':b,'diff':cmd(['git','diff',base,b,'--','apps/order_api'],root)[:30000]}
+   if c.get('phase')=='verify':result['deployed_repair']={'incident_sha':c['observed_sha'],'deployed_sha':b,'diff':cmd(['git','diff',c['observed_sha'],b,'--','apps/order_api','tests/order'],root)[:30000]}
+   return result
   if name=='create_workspace':
    if get('workspace',cid):return get('workspace',cid)
    root=repository();base=require_sha(c['observed_sha']);assert_trusted(base)
@@ -107,7 +122,8 @@ def tool(name:str,args:dict):
    check_changes(root,w['base_sha']);run_id=ident('test')
    argv=['python','/app/scripts/ci.py','--candidate',str(root),'--trusted','/app','--oracle-host-path',HOST_REPO+'/contracts','--candidate-volume','jiuwen-ops-adx-lab_work']
    result=subprocess.run(argv,capture_output=True,text=True,timeout=360)
-   rec={'test_id':run_id,'passed':result.returncode==0,'output':(result.stdout+result.stderr)[-45000:],'tree_hash':cmd(['git','write-tree'],root)};put('test',cid,rec);return rec
+   output=re.sub(r"((?:POSTGRES|CONTRACT_DB|DB)_PASSWORD=)[^\s'\"]+",r'\1[REDACTED]',result.stdout+result.stderr)
+   rec={'test_id':run_id,'passed':result.returncode==0,'output':output[-45000:],'tree_hash':cmd(['git','write-tree'],root)};put('test',cid,rec);return rec
   if name=='create_pull_request':
    check_changes(root,w['base_sha']);test=get('test',cid)
    if not test or not test['passed'] or test['tree_hash']!=cmd(['git','write-tree'],root):raise HTTPException(409,'Passing tests required for exact candidate tree')
@@ -214,8 +230,8 @@ def ops(name:str,args:dict):
    arch='arm64' if os.uname().machine=='aarch64' else 'amd64'
    artifacts=gh('GET',f"/actions/runs/{run['id']}/artifacts")['artifacts'];artifact=next((x for x in artifacts if x['name']=='order-'+arch and not x['expired']),None)
    if not artifact:raise HTTPException(409,'Matching architecture artifact missing')
-   with httpx.Client(timeout=180,follow_redirects=True) as client:
-    response=client.get(artifact['archive_download_url'],headers={'Authorization':'Bearer '+secret('github_token')});response.raise_for_status();blob=response.content
+   from lab.artifact_download import download
+   blob=download(artifact,secret('github_token'),cache=DATA/'artifact-cache'/(str(artifact['id'])+'.zip'))
    with zipfile.ZipFile(io.BytesIO(blob)) as z:
     provenance=json.loads(z.read('provenance.json'));tar=z.read('image.tar')
    if str(provenance.get('run_id'))!=str(run['id']) or provenance['source_sha']!=sha or provenance['architecture']!=arch or hashlib.sha256(tar).hexdigest()!=provenance['archive_sha256']:raise HTTPException(409,'Artifact provenance mismatch')

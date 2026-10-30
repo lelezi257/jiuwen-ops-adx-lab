@@ -2,7 +2,7 @@
 
 收到订单故障后，控制器通过 ADX 按需创建 runsc 沙箱；里面启动官方 Process SDK → Swarm → Core，调用真实模型和主机工具。Agent 提交修复 PR，可信交付组件负责 CI、合并和 digest 发布；独立组件验证真实订单、金额和数据库，Agent 再只读复核。结束后释放沙箱，事件和原生轨迹留在持久目录。
 
-**当前：最小真实链路已通过，完整订单案例正在验收。** [实际状态与身份](docs/STATUS.md) · [接入设计](docs/design.html) · [部署和交互](docs/IMPLEMENTATION.md) · [操作与复现](docs/RUNBOOK.md) · [最小链路证据](docs/evidence/minimal-acceptance.json)
+**当前：最小真实链路和完整订单故障案例均已真实通过，事件达到 RESOLVED_FIXED，ADX沙箱已释放，历史仍可回看。** [实际验收报告](docs/acceptance.html) · [实际状态与身份](docs/STATUS.md) · [接入设计](docs/design.html) · [部署和交互](docs/IMPLEMENTATION.md) · [操作与复现](docs/RUNBOOK.md) · [最小链路证据](docs/evidence/minimal-acceptance.json)
 
 本仓库从 [jiuwen-ops-lab](https://github.com/lelezi257/jiuwen-ops-lab) 的 `5e0b01389a32480c0a20831aca595631c10f9f4a` 复用订单应用、可信交付和原生观测基础代码。旧项目的通过结论不属于本项目；仓库、VM、容器、数据卷、端口均分开。
 
@@ -20,3 +20,5 @@
 模型 Key、GitHub Token、平台凭证仅存在 `.local/`、VM 私有配置和 Docker secrets 中，不上传。GitHub 凭证留在可信交付组件，ADX 凭证留在控制器，执行沙箱只有模型配置和本次 case/attempt/phase 的短期工具授权。普通模型调用会消耗配置的模型账户额度。
 
 网络受限时，先解决 VM 的 apt、镜像仓库、Python/npm、GitHub 和模型端点访问；可在 VM `.local/runtime.env` 配置镜像/包源。脚本不默认关闭 TLS 或沙箱 ACL。参见 [RUNBOOK](docs/RUNBOOK.md)。
+
+本次验收包含环境/网络修正、一次修复重试和一次复核重试，失败记录完整保留；这证明真实功能链路通过，不代表已完成无人干预、并发、多租户或生产可靠性验收。原生界面沿用原版前端，自有只读接线和跟随栏的边界见[实现说明](docs/IMPLEMENTATION.md)。

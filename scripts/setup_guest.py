@@ -10,19 +10,8 @@ import urllib.request
 root = Path(__file__).resolve().parents[1]
 if os.geteuid() != 0 or not Path('/etc/jiuwen-ops-adx-lab-owner').exists():
     raise SystemExit('Run as root on the dedicated jiuwen-ops-adx-lab VM')
-opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-try:
-    with opener.open('http://127.0.0.1:19780/api/overview', timeout=10) as response:
-        current = json.load(response)
-except (urllib.error.URLError, TimeoutError):
-    running = subprocess.check_output(['docker', 'ps', '-q', '--filter', 'label=com.docker.compose.project=jiuwen-ops-adx-lab', '--filter', 'label=com.docker.compose.service=control'], text=True).strip()
-    if running:
-        raise SystemExit('Existing control service is running but its task state cannot be read; setup will not restart it')
-    current = None
-terminal = {'RESOLVED_FIXED', 'RECOVERED_ROLLBACK', 'NEEDS_HUMAN', 'CANCELLED', 'NO_ACTION', 'TRACE_PROBE_COMPLETED', 'DELIVERY_ACCEPTANCE_PASSED'}
-if current and (any(c['state'] not in terminal for c in current['cases']) or
-                any(o['state'] not in {'SUCCEEDED', 'FAILED', 'INTERRUPTED'} for o in current['operations'])):
-    raise SystemExit('Active case or operation found; setup will not rebuild/restart these services')
+from assert_idle import ensure_idle
+ensure_idle()
 
 def run(*args):
     subprocess.run(list(map(str, args)), cwd=root, check=True)

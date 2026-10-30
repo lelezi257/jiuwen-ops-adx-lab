@@ -1,54 +1,41 @@
-# 九问怎样接进来
+# 九问实际接入方式
 
-先看 `lab/runner.py`，再看 `lab/tools.py`。我们的 runner 是常驻独立服务；一次任务调用官方 SDK 的 `Client.run`，SDK 启动一个官方 `jiuwenswarm-process --run-jsonl` 子进程。子进程内部创建共享 Swarm Runtime，装配 Core/DeepAgent。模型决定调用哪个工具、读取实际结果并继续推理，这个循环属于官方实现。
-
-## 边界
+本版采用**ADX按需沙箱 + 官方Process SDK**。没有常驻runner服务，也没有用REST壳自行实现模型循环。完整组件分工见[实际部署](IMPLEMENTATION.md)。
 
 ```text
-我们的控制中心 --HTTP任务/租约--> 我们的 runner
-    runner 内：官方 Process SDK Client
-             ⇅ stdin/stdout JSONL
-    官方 Swarm Process CLI / Runtime 子进程
-             └─ Core / DeepAgent ⇄ 真实模型
-             └─ host_tool.requested
-                    ⇅ SDK on_tool_call 回调
-    runner --带任务身份的HTTP--> 我们的取证/工程服务
+告警 → 产品控制器（选case / attempt / Binding）
+     → ADX公开managed HTTP（第一次请求才创建Environment）
+     → runsc沙箱中的execution host
+         → 官方Process SDK Client
+         → 官方Process CLI / Swarm Runtime
+         → 官方Core / DeepAgent → 真实模型
+             ↔ 声明的host tools → scoped broker → 取证 / 可信工程服务
 ```
 
-执行侧不部署完整 Gateway/AgentServer，不通过 WebSocket 消息驱动模型，也不重写 `DeepAgent`。现已增加原版 WebUI 与官方读取组件组成的独立只读观测服务，见 [原生轨迹接线](NATIVE-WEBUI.md)。能力对应既有学习地图的 C3 单 Agent，宿主边界对应 S2 Process SDK。调查/修复任务与部署后验证任务使用不同新 Session；CI 等待和发布状态属于控制中心，不让模型空转等待。
+## 用的是什么接口
 
-## 一次调用
+1. `lab/adx_dispatch.py`调用ADX的数字版本模板、Binding查询/删除，以及`/agent/http/runs?target=urn:adx:binding:...`。它负责选择业务承载身份、持久化请求意图和清理，不负责Agent循环。
+2. `lab/execution_host.py`在沙箱启动时查询`Client.query('protocol.capabilities')`，检查主机工具、结构化输出、空工具、max_turns和取消能力。查询不需要模型；它通过不代表真实模型验收通过。
+3. `lab/runner.py`构造官方`jiuwenswarm_sdk.Client`，command为`[python, -m, jiuwenswarm.channels.process_cli.main]`，调用`Client.run(...)`，传入agent声明、instructions、host_tools、permissions、output_schema与预算/轮次限制。
+4. `on_event`记录SDK真实`run.started`里的SessionID和request_id；`on_tool_call`通过本case短期授权调用broker；`on_interaction`不自动回答未知交互。取消由官方SDK的cancel事件传递。
+5. 模型配置通过Swarm配置中的`${API_BASE}`/`${API_KEY}`等变量注入。host在启动时从只读私有文件加载，模型调用和工具选择属于官方Runtime/Core。
+6. repair、显式重试和verify各自创建新的官方SDK Session，同一case可复用一个ADX Binding/Environment。CI、合并、构建、发布与独立验证属于产品平台状态，不转换成Core Span。
 
-1. runner 用真实 `Client.query("protocol.capabilities")` 检查 `host_tools`、`structured_output`、`empty_tools`、`max_turns` 和取消能力；查询不需要模型。
-2. 只有模型配置完整才领取任务。控制中心分配 case/attempt，runner 持续续租。
-3. `Client.run(request, on_event=..., on_tool_call=..., on_interaction=..., cancel=..., deadline_seconds=...)`。
-4. 请求含 Agent 定义、按阶段工具白名单、host_tools JSON Schema、权限、报告工作区、结构化结果 Schema 和执行上限。
-5. 只有 `host_tool.requested` 执行实际工具。观察性的 `chat.tool_call` 只记录。
-6. runner 强制覆盖实际 case_id；模型无法把工具请求切换到另一个事件。工具服务再校验事件状态和路径。
-7. `on_interaction` 记录实际问题并停止/转人工；没有通用“yes”或权限自动扩大。
-8. SDK 负责协议身份、连续 sequence、终态与 OS 退出码校验。宿主还检查业务结果与真实 PR 账本一致。`chat.final` 和 EOF 都不是成功。
-9. 取消传给同一个 run 的 asyncio.Event。已发生的工具副作用保留并对账，不盲目重试。
+## 工具和交付边界
 
-配置入口是 `.local/model.env` 和单独挂载的 `.local/swarm/config.yaml`。目录实际挂在 `/data/swarm/config`，由 `JIUWENSWARM_DATA_DIR/config/config.yaml` 读取；仅设置 `JIUWENSWARM_CONFIG_DIR` 不足以更改读取位置。模型 Key 不进入 run JSON、不挂入候选测试容器、不进入 Git。官方配置字段为 `models.defaults[].model_client_config`，使用 API_BASE/API_KEY/MODEL_NAME 等环境插值。
+SDK只声明`lab/tools.py`允许的主机工具。broker在服务端按case/attempt/phase校验、覆盖case归属；repair有受限写工具，verify只读。工程服务拥有GitHub和Docker权限，执行沙箱没有这些凭证。可信测试与PR头/base校验、合并、artifact校验、digest部署和独立SQL验证都不能被模型一句“成功”代替。
+
+SDK回执原样保留。`completed/exit_code=0`不等于业务恢复；还需真实证据、PR/CI/版本链、独立业务验证和复核。输出格式、模型或网络失败会停止或进入核查，不提供固定修复兜底。
+
+## 原生观测
+
+执行侧没有部署完整Gateway/AgentServer Web后端。独立native-web服务复用固定版本的原版前端、官方TrajectoryHost和HTTP读取组件，增加只读会话接线、按case固定读取根与顶部跟随栏。它不能运行新Agent或修改记录。官方Session和SQLite由真实SDK/Core产生，资源释放后仍可回看。边界详见[原生读取实现](IMPLEMENTATION.md#原生轨迹扩展边界)。
+
+`./scripts/lab qualify`现在是只读真实模型任务：指标 → 日志 → 实际发布身份 → 已存证据；最小验收见[证据](evidence/minimal-acceptance.json)。它不代表完整订单恢复验收，也不是旧版常驻runner资格脚本。
 
 ## 固定源码
 
-- [Swarm SDK README](https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/sdks/README.md)
-- [Process 协议](https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/sdks/PROTOCOL.md)
-- [SDK Client](https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/sdks/python/src/jiuwenswarm_sdk/client.py)
-- [Runtime 接线](https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/jiuwenswarm/channels/process_cli/client.py)
-- [Core](https://github.com/openJiuwen-ai/agent-core/tree/e089198835426cd7681761b0cc278670cd83031f)
-
-构建从官方 GitHub 下载固定提交的源码。上游元数据声明的部分依赖使用 GitCode Git URL，因此安装脚本只把这些固定依赖的下载通道换成官方 GitHub 快照：先解析非 Git 依赖，再 `--no-deps` 安装原样源码；不修改上游 Agent 实现。上游 Core 对 intelliRouter 使用浮动分支，本项目额外固定了分支当时的 SHA，见 lock。完整下载与包版本记录在构建容器 `/app/vendor/source-manifest.json` 和后续验收材料。
-
-协议能力查询通过，只证明 SDK/CLI 查询通道；真实模型、host tool 循环、Session、取消与清理仍需单独实际验收。不得把接口形状检查当成 G1 完成。
-
-
-## 配好 Key 后单独验收
-
-执行 `scripts/lab qualify`：真实 SDK 发现、非法输入失败、模型读取实际运行版本的 host tool、结构化结果，以及在实际工具回调后取消同一个 run。结果写入 runner 数据卷的 `/data/qualification/report.json`。这条命令会调用真实模型并产生供应商费用；它还不是订单故障修复 E2E。
-
-不配 Key 也可在 VM 内执行 `sudo docker compose --env-file .local/lab.env --env-file .local/runtime.env exec -T runner python /app/scripts/qualify_jiuwen.py --discovery-only`，只检查协议和非法输入；报告保留 `real_model_qualified=false`。
-
-
-只读容器部署需显式处理写入目录：SDK 子进程 cwd 使用可写的 `/data`；Core 默认日志随 cwd 写入；Swarm 扩展管理器会确保安装根下的 `application_plugins` 存在，本镜像在构建时预建空目录。会话/日志在独立数据卷，配置在单独挂载目录，框架源码不做运行时修改。
+- [Python SDK Client](https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/sdks/python/src/jiuwenswarm_sdk/client.py)
+- [Process CLI机器协议](https://github.com/openJiuwen-ai/jiuwenswarm/tree/32d75d7d3a0b466412ee64d77c29460297515119/jiuwenswarm/channels/process_cli)
+- [ADX源码](https://gitcode.com/openJiuwen/agent-dx/tree/a88659db6779538fba5337025c8bc09f530b044d)
+- [全部框架固定提交](../config/framework.lock.json)，[基础包锁](../config/infrastructure.lock.json)。

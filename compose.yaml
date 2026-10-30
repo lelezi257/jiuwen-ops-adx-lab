@@ -167,7 +167,7 @@
         "APT_MIRROR_SITE": "${APT_MIRROR_SITE:-}",
         "HTTP_PROXY": "${HTTP_PROXY:-}",
         "HTTPS_PROXY": "${HTTPS_PROXY:-}",
-        "NO_PROXY": "${NO_PROXY:-localhost,127.0.0.1,control,probe,order-api,pypi.org,files.pythonhosted.org}"
+        "NO_PROXY": "${OPS_DELIVERY_NO_PROXY:-localhost,127.0.0.1,control,probe,order-api,pypi.org,files.pythonhosted.org,github.com,api.github.com,.githubusercontent.com,.blob.core.windows.net}"
       },
       "volumes": [
         "delivery:/data",

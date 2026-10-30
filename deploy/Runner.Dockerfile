@@ -15,6 +15,5 @@ RUN uv pip install --no-cache -r vendor/requirements-framework.txt
 RUN python -c 'import json,subprocess; subprocess.run(["uv","pip","install","--no-deps",*json.load(open("vendor/projects.json"))],check=True)'
 RUN python -c 'import sysconfig; from pathlib import Path; (Path(sysconfig.get_paths()["purelib"])/"application_plugins").mkdir(exist_ok=True)'
 COPY lab /app/lab
-COPY scripts/qualify_jiuwen.py /app/scripts/qualify_jiuwen.py
 RUN ln -s /app/vendor /vendor
 CMD ["python","-m","uvicorn","lab.execution_host:app","--host","0.0.0.0","--port","8080"]

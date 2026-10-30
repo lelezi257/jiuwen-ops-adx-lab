@@ -62,3 +62,9 @@
 - [ADX源码](https://gitcode.com/openJiuwen/agent-dx/tree/a88659db6779538fba5337025c8bc09f530b044d)：`agent/crates/core/src/lib.rs`模板契约；`agent/activator/src/lib.rs`Binding激活/删除；`gateway/src/ingress/agent_api.rs`托管HTTP入口；`platform/adxlet/src/sandboxd.rs`真实后端适配。
 - [Swarm源码](https://github.com/openJiuwen-ai/jiuwenswarm/tree/32d75d7d3a0b466412ee64d77c29460297515119)：`jiuwenswarm/channels/process_cli`机器协议，SDK的`Client.run`/host tools；`jiuwenswarm/server/trajectory/host.py`原生轨迹读取；`gateway/channel_manager/web/trajectory_http.py`原生HTTP；`jiuwenswarm/channels/web/frontend`原版前端。
 - [框架全部固定版本](../config/framework.lock.json)，Core固定e0891988。ADX只负责执行环境及路由，Swarm/Core负责Agent循环，产品组件负责运维闭环。
+
+## 本次验收修正的产品边界
+
+发布后复核的输入由broker组合真实PR、CI、merge SHA、构建及部署账本，并与历史修复反馈分开。复核输出里的null PR字段只是只读协议形状，不代表此前没有修复PR。源码读取对已经取得的不可变提交直接读本地Git对象；需要缺失对象时才fetch，保留实际base/running SHA和incident到deployed的修复diff。上述事实和工具接线属于运维产品，模型循环仍完全由九问执行。
+
+每次真实SDK执行保存自己的Binding/Environment身份；历史缺失字段仅从同attempt已记录的ADX接受事件补全，不用当前环境冒充历史环境。显式资源释放先预留REQUESTED状态，未完成核查时禁止并发重试，避免一边销毁环境一边启动模型。

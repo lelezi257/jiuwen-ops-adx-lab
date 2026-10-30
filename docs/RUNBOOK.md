@@ -27,8 +27,9 @@ ADX包来自[本实验Release](https://github.com/lelezi257/jiuwen-ops-adx-lab/r
 - 更新本地`.local/model.env`后执行`./scripts/lab configure-model`。它把配置原子替换为VM私有root:root/0600文件，用于未来沙箱，不重启活动环境。若首次缺少模型导致`/ready`失败，先核查和结束失败事件，再释放其资源，之后发新任务。
 - `./scripts/lab vm-status`查看新Compose组件；`limactl shell jiuwen-ops-adx-lab -- sudo systemctl status ops-adx-platform ops-adx-sandboxd`查看ADX。
 - `./scripts/lab qualify`是只读真实模型探针。`NEEDS_HUMAN`不是成功；工作台技术详情保留官方SDK错误和事件。禁止为了让状态通过而手工修改数据库或伪造回执。
+- CI已通过、PR尚未合并时，临时交付读取失败可用“核查并继续交付”：服务重新验证当前运行版本、同一个未变化PR及可信CI，才恢复交付。已合并、变更或核查不通过的PR不会重放合并；不会重新运行模型。
 - 结果不明不自动重放。先核查真实Session/PR/发布与日志，必要时通过带本地操作令牌的`POST /api/cases/<case>/cancel`停止未来工具动作，再对终态case调用`POST /api/cases/<case>/release-allocation`。释放会终止资源，保留历史；不等于修复。
-- 配置/部署前查看`GET /api/overview`，有活动任务不要重启。`vm-sync`只同步源码和明确配置，不删除case目录/卷，且排除VM自己管理的ADX租户令牌。
+- 配置/部署前查看`GET /api/overview`，有活动任务不要重启。`vm-sync`只同步源码和明确配置，不删除case目录/卷，且排除VM自己管理的ADX租户令牌。`vm-sync`、`up`和`vm-install`在完整同步/重启前均会检查活动任务；状态不可读时也拒绝改动。
 - 不使用`docker system prune`、`docker compose down -v`或删除VM恢复。历史、模型配置和数据卷都是用户数据。
 
 ## 验证边界
@@ -36,3 +37,7 @@ ADX包来自[本实验Release](https://github.com/lelezi257/jiuwen-ops-adx-lab/r
 产品测试：`python -m unittest discover -s tests/product -v`。可信业务合同：Linux Docker中运行`python scripts/ci.py --candidate . --trusted .`。原生只读传输校验：在native-web容器中运行`python /app/scripts/check_native_observer.py <真实SessionID>`。这些都不能替代完整订单真实模型/PR/CI/发布/独立验证。
 
 最小链路结果见[实际证据](evidence/minimal-acceptance.json)。完整订单验收以[STATUS](STATUS.md)及其证据为准；早期失败任务和旧项目的PASS都不能替代新项目验收。
+
+测试数据库的本地别名由`scripts/prepare_test_images.py`在启动时准备，指向与已部署DB完全相同的镜像ID；不通过修改测试断言绕过镜像拉取问题。交付组件使用独立的`OPS_DELIVERY_NO_PROXY`配置，避免系统全局NO_PROXY覆盖内部服务或GitHub直连配置。网络调整不能替代真实CI和产物摘要校验。
+
+GitHub产物下载使用受限并发Range读取，逐段检查HTTP206、Content-Range和长度，完成后对照GitHub归档SHA256，再检查内部provenance、source SHA、架构、run ID及镜像归档摘要。私有缓存只接受同一artifact ID且匹配权威摘要的完整文件；不伪造CI或跳过验证。本机首次真实59MB产物下载仍耗时565.77秒，不能把已缓存的快速导入当作公网下载性能。

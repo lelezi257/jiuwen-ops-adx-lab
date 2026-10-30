@@ -5,6 +5,21 @@ from lab.common import call
 from lab.tools import READ, WRITE
 
 
+def execution_case(case):
+    if case.get("phase") != "verify":
+        return case
+    # A review receives completed delivery facts, not stale repair instructions.
+    # The original feedback and all previous runs remain in the controller ledger.
+    return {**case, "feedback": {
+        "phase": "verify",
+        "completed_delivery": {
+            "pr": case.get("pr"), "ci": case.get("ci"),
+            "merge_sha": (case.get("merge") or {}).get("merge_sha"),
+            "build": case.get("build"),
+            "deployment": (case.get("deployment") or {}).get("ledger")},
+        "output_contract": "pr_number and candidate_sha must be null in this read-only review; null does not mean the completed repair PR is missing. Judge the current verification and actual delivery identities. Do not create another PR."}}
+
+
 def install(app):
     # Import after control's application and state helpers are defined.
     from lab import control
@@ -19,7 +34,7 @@ def install(app):
     @app.get("/execution/context")
     def execution_context(authorization: str = Header(default="")):
         case, _ = context(authorization)
-        return case
+        return execution_case(case)
 
     @app.post("/execution/{action}")
     def report(action: str, body: dict, authorization: str = Header(default="")):

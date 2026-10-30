@@ -142,6 +142,16 @@ def list_cases():return sorted(all_objects('case'),key=lambda x:x['created_at'],
 def case(cid:str):
  c=get('case',cid)
  if not c:raise HTTPException(404,'Case not found')
+ return with_run_identities(c)
+def with_run_identities(c):
+ runs=c.get('sdk_runs') or {}
+ if any(not r.get('environment_id') for r in runs.values()):
+  runs={aid:dict(run) for aid,run in runs.items()};c={**c,'sdk_runs':runs}
+  accepted={e['data']['attempt_id']:e['data'] for e in events(c['id']) if e['kind']=='adx.execution.accepted'}
+  for aid,run in runs.items():
+   ref=accepted.get(aid,{})
+   for key in ['binding_id','environment_id']:
+    if not run.get(key) and ref.get(key):run[key]=ref[key]
  return c
 @app.get('/api/cases/{cid}/events')
 def list_events(cid:str):return events(cid)
@@ -186,6 +196,18 @@ def approve(cid:str):
 def release_allocation(cid:str):
  from lab.adx_dispatch import release_terminal
  return release_terminal(cid)
+@app.post('/api/cases/{cid}/resume-delivery',dependencies=[Depends(operator)])
+def resume_delivery(cid:str):
+ with mutex:
+  c=case(cid)
+  if c['state']!='NEEDS_HUMAN' or c.get('cancelled') or c.get('phase')!='repair' or not c.get('pr') or c.get('merge'):raise HTTPException(409,'Only an unmerged checked repair can resume delivery')
+  if (c.get('cleanup') or {}).get('state') in ['REQUESTED','PENDING_RECONCILIATION']:raise HTTPException(409,'Finish allocation release reconciliation before resuming')
+  cur=call(DELIVERY,'/ops/current',{})
+  if not cur['consistent'] or cur['runtime']['source_sha']!=c['observed_sha']:raise HTTPException(409,'Runtime changed; reconcile explicitly')
+  status=call(DELIVERY,'/ops/pr-status',{'case_id':cid})
+  if status.get('state')!='passed' or status.get('pr')!=c['pr']:raise HTTPException(409,'Exact original PR and trusted CI must still pass; merged or changed PRs require reconciliation')
+  c['ci']=status;event(cid,'delivery.reconciled',{'pr':status['pr'],'run_id':status.get('run_id'),'source':'operator read-only recheck'})
+  return save(c,'READY_TO_MERGE','Operator rechecked the unchanged open PR and runtime; no SDK/model replay')
 @app.post('/api/experiment/{action}',dependencies=[Depends(operator)])
 def experiment(action:str,body:dict):
  if action=='bootstrap':return call(DELIVERY,'/ops/bootstrap',body,timeout=180)
@@ -220,7 +242,8 @@ def record(cid:str,body:dict):
    runs=c.setdefault('sdk_runs',{});run=runs.get(body['attempt_id'])
    if run and run['session_id']!=sid:raise HTTPException(409,'SDK session changed within one attempt')
    if not run:
-    runs[body['attempt_id']]={'attempt_id':body['attempt_id'],'phase':c['phase'],'session_id':sid,'request_id':data.get('request_id'),'started_at':now()};save(c)
+    binding=c.get('execution_binding') or {}
+    runs[body['attempt_id']]={'attempt_id':body['attempt_id'],'phase':c['phase'],'session_id':sid,'request_id':data.get('request_id'),'started_at':now(),'binding_id':binding.get('binding_id'),'environment_id':binding.get('environment_id')};save(c)
   key=cid+':'+body['attempt_id']+':'+str(body.get('sequence',ident('s')));event(cid,body['kind'],body['data'],key);return {'ok':True}
 @app.post('/internal/cases/{cid}/result',dependencies=[Depends(worker)])
 def result(cid:str,body:dict):
@@ -275,6 +298,7 @@ def retry(cid:str):
  with mutex:
   c=case(cid)
   if c['state'] not in ['NEEDS_HUMAN','CANCELLED'] or c.get('kind')=='engineering_acceptance':raise HTTPException(409,'Not a retriable Agent case')
+  if (c.get('cleanup') or {}).get('state') in ['REQUESTED','PENDING_RECONCILIATION']:raise HTTPException(409,'Finish allocation release reconciliation before retrying')
   cur=call(DELIVERY,'/ops/current',{})
   target='TRACE_PROBE_QUEUED' if c.get('kind')=='trace_probe' else 'REPAIR_QUEUED'
   if c.get('phase')=='verify' and c.get('merge'):
@@ -282,5 +306,5 @@ def retry(cid:str):
    if not cur['consistent'] or not report.get('passed') or any(ledger.get(k)!=report.get(r) for k,r in [('release_id','release_id'),('source_sha','expected_source_sha'),('image_digest','expected_image_digest')]):raise HTTPException(409,'Verified deployment changed; do not retry an obsolete review')
    target='VERIFY_AGENT_QUEUED'
   elif not cur['consistent'] or cur['runtime']['source_sha']!=c['observed_sha'] or c.get('merge'):raise HTTPException(409,'External state changed; investigate and reconcile before retry')
-  c['cancelled']=False;c['attempt_id']=ident('retry-reservation');c['feedback']={'previous_result':c.get('agent_result'),'operator_retry':True};put('case',cid,c)
+  c['cancelled']=False;c['attempt_id']=ident('retry-reservation');c['feedback']={'previous_result':c.get('agent_result'),'previous_phase':c.get('phase'),'operator_retry':True};put('case',cid,c)
   return save(c,target,'Operator requested new attempt; prior attempts retained; no replay of completed delivery')
