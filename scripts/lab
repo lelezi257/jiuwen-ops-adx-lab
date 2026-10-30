@@ -20,6 +20,7 @@ case "$command_name" in
   limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && python3 scripts/sync_guard.py config.tar.gz && tar -xzf source.tar.gz && tar -xzf config.tar.gz && rm source.tar.gz config.tar.gz && chmod 700 .local .local/secrets && chmod 600 .local/secrets/* .local/model.env && chmod 644 .local/secrets/db_password .local/secrets/verify_db_password && python3 scripts/runtime_env.py '"$(git rev-parse HEAD)"
 
   ;;
+ vm-install) exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,NO_PROXY,http_proxy,https_proxy,no_proxy python3 scripts/setup_guest.py' ;;
  vm-up) exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,NO_PROXY,http_proxy,https_proxy,no_proxy ./scripts/lab up' ;;
  vm-status) exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && sudo ./scripts/lab status' ;;
  up)
@@ -55,5 +56,5 @@ case "$command_name" in
  stop) compose stop
   docker stop ops-adx-order-api
   ;;
- *) printf '%s\n' 'init [--github] | vm-create | vm-sync | vm-up | vm-status | up | status | configure-model | qualify | token | baseline | fault | investigate | agent-acceptance [--trials 3] | smoke | logs | stop' ;;
+ *) printf '%s\n' 'init [--github] | vm-create | vm-sync | vm-install | vm-up | vm-status | up | status | configure-model | qualify | token | baseline | fault | investigate | agent-acceptance [--trials 3] | smoke | logs | stop' ;;
 esac

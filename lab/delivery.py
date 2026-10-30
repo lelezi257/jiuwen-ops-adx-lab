@@ -11,7 +11,9 @@ ALLOWED=('apps/order_api/','tests/order/')
 TRUSTED=['.github/workflows/contract.yml','.github/workflows/build.yml','deploy/Order.Dockerfile','contracts/check_http.py','scripts/ci.py']
 def cmd(argv,cwd=None,timeout=120,check=True):
  env={**os.environ,'GIT_TERMINAL_PROMPT':'0','GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'credential.helper','GIT_CONFIG_VALUE_0':'!python /app/lab/git_credential.py'}
- r=subprocess.run(argv,cwd=cwd,env=env,capture_output=True,text=True,timeout=timeout)
+ try:r=subprocess.run(argv,cwd=cwd,env=env,capture_output=True,text=True,timeout=timeout)
+ except subprocess.TimeoutExpired:
+  raise HTTPException(504,f'{argv[0]} exceeded its {timeout}s deadline; inspect build/network evidence before retrying. No success receipt was recorded.')
  if check and r.returncode:raise RuntimeError(f'{argv[0]} failed ({r.returncode}): '+r.stderr[-1500:])
  return r.stdout.strip()
 def build_options():

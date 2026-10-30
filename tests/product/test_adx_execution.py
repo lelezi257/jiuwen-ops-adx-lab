@@ -75,3 +75,18 @@ class AdxExecutionBoundaries(unittest.TestCase):
         with patch.dict(os.environ, {"OPS_CASE_ID": "case-other"}):
             with self.assertRaises(Exception):
                 execution_host.require_owned_case(self.case)
+
+    def test_broker_overwrites_caller_supplied_case_with_grant_owner(self):
+        token = execution_auth.issue(self.case)
+        with patch("lab.execution_broker.call", return_value={"ok": True}) as upstream:
+            response = TestClient(create_app()).post("/execution/tools/query_metrics", json={"case_id": "case-other"},
+                                                   headers={"Authorization": "Bearer " + token})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(upstream.call_args.args[2]["case_id"], self.case["id"])
+
+    def test_operator_release_does_not_delete_an_active_execution(self):
+        from lab.adx_dispatch import release_terminal
+        with patch("lab.adx_dispatch.client") as platform:
+            with self.assertRaises(Exception):
+                release_terminal(self.case["id"])
+        platform.assert_not_called()

@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""Do not replace an existing VM's database identity during a fresh clone sync."""
-import hmac,sys,tarfile
+"""Reject credential changes that could detach existing persistent VM state."""
+import hmac
 from pathlib import Path
-root=Path(__file__).resolve().parents[1]
-existing=root/'.local/secrets/db_password'
-if existing.exists():
- with tarfile.open(sys.argv[1]) as archive:
-  incoming=archive.extractfile('.local/secrets/db_password').read().strip()
- if not hmac.compare_digest(existing.read_bytes().strip(),incoming):
-  raise SystemExit('VM already has a different lab identity. Restore the original .local configuration before syncing; no existing data or credentials were overwritten.')
-print('VM configuration identity checked')
+import sys
+import tarfile
+
+root = Path(__file__).resolve().parents[1]
+with tarfile.open(sys.argv[1]) as archive:
+    for name in ('db_password', 'verify_db_password', 'control_token', 'runner_token', 'execution_signing_key'):
+        existing = root / '.local/secrets' / name
+        if not existing.exists():
+            continue
+        try:
+            incoming = archive.extractfile('.local/secrets/' + name).read().strip()
+        except KeyError:
+            raise SystemExit('Missing persisted identity in configuration archive: ' + name)
+        if not hmac.compare_digest(existing.read_bytes().strip(), incoming):
+            raise SystemExit('VM has a different persisted identity (' + name + '); restore its original configuration before syncing. No files were overwritten.')
+print('VM configuration identities checked')

@@ -10,7 +10,7 @@ def api(path,body=None):
  request=urllib.request.Request('http://127.0.0.1:19780'+path,data=json.dumps(body).encode() if body is not None else None,headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},method='POST' if body is not None else 'GET')
  with client.open(request,timeout=650) as r:return json.load(r)
 status=api('/api/status')
-if not status['runner'].get('model_configured'):raise SystemExit('Model not configured. No fault, patch, PR or model call was made by this command.')
+if status['runner'].get('state')!='ADX_READY':raise SystemExit('ADX template is not ready. No fault, patch, PR or model call was made by this command.')
 report={'scope':'real_model_agent_acceptance','started_at':time.time(),'requested_trials':args.trials,'trials':[],'errors':[],'passed':False}
 path=root/'.local/evidence'/('agent-acceptance-'+str(int(time.time()))+'.json');path.parent.mkdir(parents=True,exist_ok=True)
 terminal={'RESOLVED_FIXED','RECOVERED_ROLLBACK','NEEDS_HUMAN','CANCELLED','NO_ACTION','TRACE_PROBE_COMPLETED'}
