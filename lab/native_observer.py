@@ -24,14 +24,12 @@ from jiuwenswarm.server.control.history_service import load_history_query,stream
 log=logging.getLogger(__name__)
 ROOT=Path(os.environ.get('JIUWENSWARM_DATA_DIR','/observer/state'))
 RECORDINGS=Path(os.environ.get('LAB_RECORDINGS','/recordings/swarm'))
-(ROOT/'agent').mkdir(parents=True,exist_ok=True)
-link=ROOT/'agent/sessions'
-if not link.exists() and not link.is_symlink():link.symlink_to(RECORDINGS/'agent/sessions',target_is_directory=True)
-settings=TrajectoryStoreSettings(enabled=True,database_path=RECORDINGS/'.trace/sessions',retention_days=7,queue_size=4096,batch_size=128,flush_interval_ms=500)
-host=TrajectoryHost(settings)
+from lab.recording_index import RecordingIndex
+index=RecordingIndex(RECORDINGS,ROOT)
 
 async def metadata(sid,user_id=None):
  validate_session_id(sid)
+ if not index.exists(sid):raise ValueError('Official Session not found')
  return await get_session_metadata_async(sid,cache_bust=True,enable_writeback=False)
 
 class ReadOnlyChannel(WebChannel):
@@ -48,7 +46,7 @@ class ReadOnlyChannel(WebChannel):
    sid=params.get('session_id')
    if sid:
     validate_session_id(sid)
-    if not (RECORDINGS/'agent/sessions'/sid).is_dir():raise ValueError('SDK session not found')
+    if not index.exists(sid):raise ValueError('SDK session not found')
     ws._observer_sid=sid
    value=await dispatch(method,params,ws,req['id'])
    await self.send_response(ws,req['id'],ok=True,payload=value)
@@ -62,15 +60,11 @@ channel=ReadOnlyChannel(WebChannelConfig(enabled=True,host='0.0.0.0',port=8081,p
 async def dispatch(method,p,ws,req_id):
  if method=='config.get':
   return {'setup_guide_enabled':False,'trajectory_ui_diagnosis_enabled':True,'rsi_enabled':False,'a2ui_enabled':False,'multi_model_collaboration_enabled':False,'preferred_language':'zh','observer_read_only':True}
- if method=='models.list':
-  # Identity-only projection of the actual execution host; no API Key is shared.
-  async with httpx.AsyncClient(timeout=3,trust_env=False) as client:
-   status=(await client.get('http://runner:8080/health')).json()
-  name=status.get('model_name','')
-  return {'models':[{'model_id':'mdl_ops_lab','model_name':name,'model_provider':'SDK execution host','api_base':'','api_key':'','has_api_key':False,'is_default':True}] if name else [],'active_model':name or None}
+ if method=='models.list':return {'models':[],'active_model':None}
  if method=='session.list':
   items=[]
-  for path in sorted((RECORDINGS/'agent/sessions').glob('*'),key=lambda x:x.stat().st_mtime,reverse=True):
+  index.refresh()
+  for path in sorted(index.sessions.glob('*'),key=lambda x:x.stat().st_mtime,reverse=True):
    if not path.is_dir():continue
    try:
     item=await metadata(path.name)
@@ -104,7 +98,8 @@ async def watch():
    sid=getattr(ws,'_observer_sid',None)
    if not sid:continue
    try:
-    reader=host.reader_for(settings)
+    owned=index.host(sid)
+    reader=owned.reader_for(owned.settings)
     items,epoch,watermark=await reader.list_subjects(sid,after_revision=0)
     frames=await reader.get_stream_frames(sid,since_frame_seq=0,limit=1)
     frame_seq=(frames or {}).get('frame_seq',0)
@@ -129,7 +124,7 @@ async def lifespan(app):
  try:yield
  finally:task.cancel()
 app=FastAPI(lifespan=lifespan)
-attach_trajectory_routes(app,channel,metadata_loader=metadata,fetch=host.call)
+attach_trajectory_routes(app,channel,metadata_loader=metadata,fetch=index.call)
 @app.get('/api/ops/state')
 async def ops_state(request:Request):
  origin=request.headers.get('origin')
@@ -139,10 +134,25 @@ async def ops_state(request:Request):
 @app.get('/api/ops/session-ready/{sid}')
 async def session_ready(sid:str):
  validate_session_id(sid)
- if not (RECORDINGS/'agent/sessions'/sid).is_dir():return {'ready':False,'session_id':sid}
+ if not index.exists(sid):return {'ready':False,'session_id':sid}
  item=await metadata(sid)
  return {'ready':bool(item),'session_id':sid}
 @app.websocket('/ws')
 async def websocket(ws:WebSocket):await _serve_channel_websocket(channel,ws)
 @app.get('/health')
 def health():return {'ok':True,'role':'native-webui-read-only-sdk-observer','native_frontend':'32d75d7d3a0b466412ee64d77c29460297515119','execution_backend':False,'recordings_read_only':True}
+
+@app.get('/api/ops/recordings-ready/{cid}')
+async def recordings_ready(cid:str):
+ async with httpx.AsyncClient(timeout=10,trust_env=False) as client:
+  response=await client.get('http://control:8080/api/cases/'+cid)
+  response.raise_for_status();case=response.json()
+ runs=list((case.get('sdk_runs') or {}).values());checks=[]
+ for run in runs:
+  sid=run['session_id']
+  if not index.exists(sid):return {'ready':False,'sessions':checks}
+  if index.owners[sid].parent.name!=cid:raise HTTPException(409,'Session belongs to another case recording root')
+  item=await metadata(sid);owned=index.host(sid)
+  subjects,epoch,revision=await owned.reader_for(owned.settings).list_subjects(sid,after_revision=0)
+  checks.append({'session_id':sid,'metadata':bool(item),'subjects':len(subjects),'revision':revision,'store_epoch':epoch})
+ return {'ready':bool(checks) and all(x['metadata'] and x['subjects']>0 and x['revision']>0 for x in checks),'sessions':checks}

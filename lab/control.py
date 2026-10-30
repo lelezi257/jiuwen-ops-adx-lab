@@ -8,7 +8,7 @@ from lab.common import *
 from lab import experience
 init_store();mutex=threading.RLock();DELIVERY='http://delivery:8080';PROBE='http://probe:8080'
 TERMINAL={'DELIVERY_ACCEPTANCE_PASSED','RESOLVED_FIXED','RECOVERED_ROLLBACK','NEEDS_HUMAN','CANCELLED','NO_ACTION','TRACE_PROBE_COMPLETED'}
-AGENT_STATES={'REPAIR_QUEUED','REPAIRING','VERIFY_AGENT_QUEUED','VERIFY_AGENT_RUNNING','TRACE_PROBE_QUEUED','TRACE_PROBE_RUNNING'}
+AGENT_STATES={'REPAIR_QUEUED','REPAIR_STARTING','REPAIRING','VERIFY_AGENT_QUEUED','VERIFY_STARTING','VERIFY_AGENT_RUNNING','TRACE_PROBE_QUEUED','TRACE_PROBE_STARTING','TRACE_PROBE_RUNNING'}
 def events(cid):return sorted((x for x in all_objects('event') if x['case_id']==cid),key=lambda x:x['time'])
 def event(cid,kind,data,key=None):
  key=key or ident('event')
@@ -96,9 +96,10 @@ async def scheduler():
   await asyncio.sleep(3)
 @asynccontextmanager
 async def lifespan(app):
- experience.interrupt_unfinished();task=asyncio.create_task(scheduler());operations=asyncio.create_task(experience.worker())
+ from lab import adx_dispatch
+ experience.interrupt_unfinished();task=asyncio.create_task(scheduler());operations=asyncio.create_task(experience.worker());dispatch=asyncio.create_task(adx_dispatch.loop())
  yield
- task.cancel();operations.cancel()
+ task.cancel();operations.cancel();dispatch.cancel()
 app=FastAPI(lifespan=lifespan)
 @app.get('/')
 def index():return FileResponse('/app/web/index.html')
@@ -120,7 +121,15 @@ def health():return {'ok':True,'role':'our-product-control','model_loop':'offici
 @app.get('/api/status')
 def status():
  result={}
- for name,url in [('runner','http://runner:8080/health'),('delivery','http://delivery:8080/health'),('evidence','http://evidence:8080/health')]:
+ from lab import adx_dispatch
+ result['runner']={'ok':False,'state':'WAITING_ADX','engine':'ADX managed execution; no prestarted Agent'}
+ if adx_dispatch.enabled():
+  try:
+   with adx_dispatch.client() as client:
+    response=client.get('/api/agent/v2/templates/'+os.getenv('ADX_TEMPLATE','ops-order')+'/versions/'+os.environ['ADX_TEMPLATE_VERSION'],timeout=3)
+    result['runner']={'ok':response.status_code==200,'state':'ADX_READY' if response.status_code==200 else 'ADX_UNAVAILABLE','engine':'ADX managed execution; Agent readiness is checked per sandbox'}
+  except Exception:result['runner']['state']='ADX_UNAVAILABLE'
+ for name,url in [('delivery','http://delivery:8080/health'),('evidence','http://evidence:8080/health')]:
   try:
    with __import__('httpx').Client(timeout=3,trust_env=False) as client:result[name]=client.get(url).json()
   except Exception:result[name]={'ok':False}
@@ -182,6 +191,7 @@ def experiment(action:str,body:dict):
 def internal_case(cid:str):return case(cid)
 @app.post('/internal/claim',dependencies=[Depends(worker)])
 def claim(body:dict):
+ if os.getenv('OPS_EXECUTION_BACKEND')=='adx':raise HTTPException(409,'ADX mode uses case-scoped dispatch; legacy queue claiming is disabled')
  with mutex:
   if any(x['state'] in ['REPAIRING','VERIFY_AGENT_RUNNING','TRACE_PROBE_RUNNING'] for x in all_objects('case')):return None
   for c in all_objects('case'):
@@ -270,3 +280,6 @@ def retry(cid:str):
   elif not cur['consistent'] or cur['runtime']['source_sha']!=c['observed_sha'] or c.get('merge'):raise HTTPException(409,'External state changed; investigate and reconcile before retry')
   c['cancelled']=False;c['attempt_id']=ident('retry-reservation');c['feedback']={'previous_result':c.get('agent_result'),'operator_retry':True};put('case',cid,c)
   return save(c,target,'Operator requested new attempt; prior attempts retained; no replay of completed delivery')
+
+from lab.execution_broker import install as install_execution_broker
+install_execution_broker(app)

@@ -21,7 +21,7 @@ def update_round(eid,**fields):
   item=get('experiment',eid);item.update(fields);item['updated_at']=now();put('experiment',eid,item);return item
 
 def rounds():return sorted(all_objects('experiment'),key=lambda x:x['created_at'],reverse=True)
-def case_summary(c):return {**{k:c.get(k) for k in ['id','kind','created_at','updated_at','state','phase','attempt','attempt_id','observed_release','observed_sha','pr','experiment_id']},'sdk_runs':c.get('sdk_runs') or {}}
+def case_summary(c):return {**{k:c.get(k) for k in ['id','kind','created_at','updated_at','state','phase','attempt','attempt_id','observed_release','observed_sha','pr','experiment_id','execution_binding','dispatch','cleanup']},'sdk_runs':c.get('sdk_runs') or {}}
 
 def attach_case(c):
  for e in rounds():

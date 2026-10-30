@@ -18,9 +18,11 @@
         }
       },
       "restart": "unless-stopped",
-      "networks": [
-        "ops"
-      ],
+      "networks": {
+        "ops": {
+          "ipv4_address": "172.29.0.2"
+        }
+      },
       "read_only": true,
       "tmpfs": [
         "/tmp"
@@ -37,10 +39,19 @@
       "environment": {
         "LAB_DATA": "/data",
         "LAB_AUTO_DELIVER": "${LAB_AUTO_DELIVER:-true}",
-        "LAB_REPAIR_LIMIT": "${LAB_REPAIR_LIMIT:-2}"
+        "LAB_REPAIR_LIMIT": "${LAB_REPAIR_LIMIT:-2}",
+        "OPS_EXECUTION_BACKEND": "adx",
+        "OPS_CASES_ROOT": "/cases",
+        "ADX_GATEWAY": "${ADX_GATEWAY:-https://host.docker.internal:19443}",
+        "ADX_TEMPLATE": "ops-order",
+        "ADX_TEMPLATE_VERSION": "${ADX_TEMPLATE_VERSION:-}",
+        "ADX_CA_FILE": "/run/adx/public-ca.pem",
+        "OPS_MAX_EXECUTIONS": "${OPS_MAX_EXECUTIONS:-1}"
       },
       "volumes": [
-        "control:/data"
+        "control:/data",
+        "./.local/cases:/cases",
+        "./.local/adx-client:/run/adx:ro"
       ],
       "command": [
         "python",
@@ -54,7 +65,9 @@
       ],
       "secrets": [
         "control_token",
-        "runner_token"
+        "runner_token",
+        "execution_signing_key",
+        "adx_tenant_token"
       ],
       "ports": [
         "127.0.0.1:19780:8080"
@@ -199,51 +212,8 @@
           "DOCKER_CLI_IMAGE": "${DOCKER_CLI_IMAGE:-docker:29.1.3-cli}"
         }
       },
-      "restart": "unless-stopped",
-      "networks": [
-        "ops"
-      ],
-      "read_only": true,
-      "tmpfs": [
-        "/tmp"
-      ],
-      "security_opt": [
-        "no-new-privileges:true"
-      ],
-      "cap_drop": [
-        "ALL"
-      ],
-      "cap_add": [
-        "DAC_OVERRIDE"
-      ],
-      "environment": {
-        "LAB_DATA": "/data",
-        "HOME": "/data/home",
-        "JIUWENSWARM_DATA_DIR": "/data/swarm",
-        "JIUWENSWARM_CONFIG_DIR": "/data/swarm/config"
-      },
-      "volumes": [
-        "runner:/data",
-        "./.local/swarm:/data/swarm/config"
-      ],
-      "command": [
-        "python",
-        "-m",
-        "uvicorn",
-        "lab.runner:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8080"
-      ],
-      "secrets": [
-        "runner_token"
-      ],
-      "env_file": [
-        ".local/model.env"
-      ],
       "profiles": [
-        "legacy"
+        "build-only"
       ]
     },
     "native-web": {
@@ -504,8 +474,24 @@
     "observer": {}
   },
   "networks": {
-    "ops": {},
-    "app": {}
+    "ops": {
+      "ipam": {
+        "config": [
+          {
+            "subnet": "172.29.0.0/24"
+          }
+        ]
+      }
+    },
+    "app": {
+      "ipam": {
+        "config": [
+          {
+            "subnet": "172.30.0.0/24"
+          }
+        ]
+      }
+    }
   },
   "secrets": {
     "control_token": {
@@ -522,6 +508,12 @@
     },
     "github_token": {
       "file": ".local/secrets/github_token"
+    },
+    "execution_signing_key": {
+      "file": ".local/secrets/execution_signing_key"
+    },
+    "adx_tenant_token": {
+      "file": ".local/secrets/adx_tenant_token"
     }
   }
 }

@@ -5,7 +5,7 @@ from pathlib import Path
 r=Path(__file__).resolve().parents[1];local=r/'.local';local.mkdir(exist_ok=True);local.chmod(0o700)
 for d in ['secrets','swarm','evidence']:
  (local/d).mkdir(exist_ok=True);(local/d).chmod(0o700)
-for name in ['control_token','runner_token','db_password','verify_db_password']:
+for name in ['control_token','runner_token','db_password','verify_db_password','execution_signing_key']:
  p=local/'secrets'/name
  if not p.exists():p.write_text(secrets.token_hex(32)+'\n')
  p.chmod(0o644 if name in ['db_password','verify_db_password'] else 0o600)
@@ -22,3 +22,7 @@ if '--github' in __import__('sys').argv:
  result=subprocess.run(['gh','auth','token'],capture_output=True,text=True,check=True)
  p.write_text(result.stdout.strip()+'\n');p.chmod(0o600)
 print('Local-only templates and identities ready. No credentials printed.')
+
+(local/"adx-client").mkdir(exist_ok=True,mode=0o700)
+(local/"cases").mkdir(exist_ok=True,mode=0o700)
+(local/"secrets/adx_tenant_token").touch(mode=0o600,exist_ok=True)

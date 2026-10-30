@@ -15,5 +15,5 @@ existing=subprocess.run(['limactl','list','--json'],capture_output=True,text=Tru
 names=[json.loads(x)['name'] for x in existing.stdout.splitlines() if x.strip()]
 if name not in names:
  subprocess.run(['limactl','create','--tty=false','--name='+name,str(path)],check=True)
-subprocess.run(['limactl','start','--tty=false',name],check=True)
+subprocess.run(['limactl','start','--tty=false','--timeout=30m',name],check=True)
 print('VM ready: '+name+'; next: scripts/lab vm-sync')

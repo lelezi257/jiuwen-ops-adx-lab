@@ -16,6 +16,7 @@ COPY --from=dockercli /usr/local/libexec/docker/cli-plugins /usr/local/libexec/d
 COPY deploy /app/deploy
 COPY scripts /app/scripts
 COPY lab /app/lab
+COPY config /app/config
 COPY contracts /app/contracts
 COPY web /app/web
 CMD ["python","-m","uvicorn","lab.control:app","--host","0.0.0.0","--port","8080"]

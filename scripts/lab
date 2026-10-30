@@ -11,7 +11,7 @@ case "$command_name" in
  vm-sync)
   # Only source + explicit configuration; never copy venvs, evidence or VM state.
   COPYFILE_DISABLE=1 tar --no-xattrs --exclude=.git --exclude=vendor --exclude=__pycache__ --exclude=.local -czf .local/sync.tar.gz .
-  COPYFILE_DISABLE=1 tar --no-xattrs -czf .local/config-sync.tar.gz .local/model.env .local/lab.env .local/secrets .local/swarm
+  COPYFILE_DISABLE=1 tar --no-xattrs -czf .local/config-sync.tar.gz .local/model.env .local/lab.env .local/secrets .local/swarm .local/adx-client
   limactl shell jiuwen-ops-adx-lab -- mkdir -p jiuwen-ops-adx-lab/scripts
   limactl copy scripts/sync_guard.py jiuwen-ops-adx-lab:jiuwen-ops-adx-lab/scripts/sync_guard.py
   limactl copy .local/sync.tar.gz jiuwen-ops-adx-lab:jiuwen-ops-adx-lab/source.tar.gz
@@ -38,20 +38,12 @@ case "$command_name" in
  status) compose ps ;;
  logs) compose logs --tail=80 "$@" ;;
  configure-model)
-  # On Mac, sync only the model file; never overwrite VM action state or credentials.
   if [[ "$(uname)" == Darwin ]]; then
    limactl copy .local/model.env jiuwen-ops-adx-lab:jiuwen-ops-adx-lab/.local/model.env
-   exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && chmod 600 .local/model.env && sudo ./scripts/lab configure-model'
   fi
-  compose up -d --no-deps --force-recreate runner
+  printf '%s\n' 'Model file updated for future ADX sandboxes; active execution environments were not restarted.'
   ;;
- qualify)
-  if [[ "$(uname)" == Darwin ]]; then
-   exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && sudo ./scripts/lab qualify'
-  fi
-  compose exec -T runner python /app/scripts/qualify_jiuwen.py --lifecycle
-  ;;
- token) cat .local/secrets/control_token ;;
+ qualify) exec python3 scripts/api.py trace-probe ;;
  baseline|fault|investigate|trace-probe)
   exec python3 scripts/api.py "$command_name" ;;
  agent-acceptance) exec python3 scripts/agent_acceptance.py "$@" ;;

@@ -17,4 +17,4 @@ RUN python -c 'import sysconfig; from pathlib import Path; (Path(sysconfig.get_p
 COPY lab /app/lab
 COPY scripts/qualify_jiuwen.py /app/scripts/qualify_jiuwen.py
 RUN ln -s /app/vendor /vendor
-CMD ["python","-m","uvicorn","lab.runner:app","--host","0.0.0.0","--port","8080"]
+CMD ["python","-m","uvicorn","lab.execution_host:app","--host","0.0.0.0","--port","8080"]

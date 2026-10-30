@@ -7,13 +7,22 @@ from fastapi import FastAPI
 from lab.common import secret,headers,DATA
 from lab.tools import READ,WRITE,RESULT
 from jiuwenswarm_sdk import Client
+from lab.execution_context import grant
 CONTROL='http://control:8080';capability=None;worker_error=None
 
 def configured():return all(os.getenv(x,'').strip() for x in ['API_BASE','API_KEY','MODEL_NAME'])
 def client():return Client(command=[sys.executable,'-m','jiuwenswarm.channels.process_cli.main'],cwd='/data',env={'JIUWENSWARM_DATA_DIR':'/data/swarm','JIUWENSWARM_CONFIG_DIR':'/data/swarm/config'})
 async def api(path,body=None):
+ token=grant.get()
+ if token:
+  if path.startswith('/internal/cases/'):
+   tail=path.split('/')[4:]
+   path='/execution/'+(tail[0] if tail else 'context')
+  auth={'Authorization':'Bearer '+token}
+ else:
+  raise RuntimeError('Execution must be accepted by the case-scoped ADX host')
  async with httpx.AsyncClient(timeout=50,trust_env=False) as c:
-  r=await c.get(CONTROL+path,headers=headers('runner')) if body is None else await c.post(CONTROL+path,json=body,headers=headers('runner'))
+  r=await c.get(CONTROL+path,headers=auth) if body is None else await c.post(CONTROL+path,json=body,headers=auth)
   r.raise_for_status();return r.json()
 def redact(value):
  if isinstance(value,str):
@@ -37,10 +46,9 @@ async def execute(case):
   state=await api('/internal/cases/'+cid)
   if state['cancelled']:cancel.set();raise RuntimeError('Case cancelled')
   if name=='get_verification_report':return case.get('verification')
-  base='http://evidence:8080' if name in ['query_metrics','query_logs','read_evidence'] else 'http://delivery:8080'
-  # Host binds the case identity; model cannot choose another case/workspace.
+  # Broker validates this execution grant and binds the case outside the sandbox.
   async with httpx.AsyncClient(timeout=420,trust_env=False) as c:
-   r=await c.post(base+'/tools/'+name,json={**args,'case_id':cid},headers=headers('runner'));r.raise_for_status();result=r.json()
+   r=await c.post(CONTROL+'/execution/tools/'+name,json=args,headers={'Authorization':'Bearer '+grant.get()});r.raise_for_status();result=r.json()
   await record('host_tool.executed',{'call_id':payload['call_id'],'name':name,'result':result});return result
  async def interaction(event):
   await record('host_interaction_unhandled',event)
