@@ -25,7 +25,7 @@ def target(case):
 
 def client():
     return httpx.Client(base_url=os.environ["ADX_GATEWAY"], verify=os.getenv("ADX_CA_FILE", "/run/adx/public-ca.pem"),
-                        headers={"Authorization": "Bearer " + secret("adx_tenant_token")}, timeout=120, trust_env=False)
+                        headers={"Authorization": "Bearer " + secret("adx_tenant_token")}, timeout=330, trust_env=False)
 
 
 def grant_file(aid):
@@ -152,6 +152,38 @@ def cleanup(cid):
         case["cleanup"] = {"state": "CONFIRMED", "confirmed_at": now()}
         control.save(case)
         control.event(cid, "adx.environment.released", snapshot)
+
+
+def release_terminal(cid):
+    """Explicit operator reconciliation; never reactivates a failed environment."""
+    from fastapi import HTTPException
+    from lab import control
+    with control.mutex:
+        case = control.case(cid)
+        if case["state"] not in control.TERMINAL:
+            raise HTTPException(409, "Cancel or finish the case before releasing its allocation")
+        binding = case.get("execution_binding")
+        if not binding or binding.get("allocation_state") == "RELEASED":
+            return case
+    with client() as http:
+        observed = http.get(binding_path(case))
+        if observed.status_code == 200:
+            value = observed.json().get("binding", observed.json())
+            binding["environment_id"] = (value.get("current") or {}).get("environment_id")
+        elif observed.status_code != 404:
+            observed.raise_for_status()
+        response = http.delete(binding_path(case))
+        if response.status_code not in {200, 204, 404}:
+            raise HTTPException(502, "ADX has not confirmed allocation deletion")
+    with control.mutex:
+        case = control.case(cid)
+        snapshot = {**binding, "allocation_state": "RELEASED", "released_at": now()}
+        case["execution_binding"] = snapshot
+        case.setdefault("binding_history", []).append(snapshot)
+        case["cleanup"] = {"state": "CONFIRMED", "confirmed_at": now(), "reason": "operator terminal reconciliation"}
+        control.save(case)
+        control.event(cid, "adx.environment.released", snapshot)
+        return case
 
 
 async def work(cid, action):

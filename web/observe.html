@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>事件持续观测 · 九问原版轨迹</title>
 <style>
 *{box-sizing:border-box}body{margin:0;color:#173449;background:#eef4f5;font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}header{padding:12px 20px;border-bottom:1px solid #cadde3;background:#fff}h1{font-size:19px;margin:0 0 8px}p{margin:6px 0}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}select,button,a{font:inherit}select,button{max-width:100%;padding:7px 10px;border:1px solid #a9c3cc;border-radius:6px;background:white;color:#173449}button{cursor:pointer}#follow{background:#236977;color:white}small,.muted{color:#627b89}#progress{font-weight:650;color:#225c70}#identity{font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere}#notice{color:#8b5a17}#trail{display:flex;gap:5px;flex-wrap:wrap}#trail button.active{border-color:#287d86;background:#e4f3ef}iframe[hidden]{display:none}iframe{display:block;width:100%;height:calc(100dvh - var(--head,205px));border:0;background:white}.empty{padding:50px;text-align:center}#empty{display:none}a{color:#216d94}details{margin-top:5px}summary{cursor:pointer}
-</style><header id="header"><div class="row"><h1>事件持续观测</h1><span class="muted">跟随栏由 Ops Lab 提供 · 下方嵌入未修改的九问原版 WebUI</span></div>
+</style><header id="header"><div class="row"><h1>事件持续观测</h1><span class="muted">跟随栏由 Ops ADX Lab 提供 · 下方嵌入未修改的九问原版 WebUI</span></div>
 <div class="row"><label for="cases">运维事件</label><select id="cases" aria-label="选择运维事件"></select><button id="follow">正在跟随最新阶段</button><a id="workbench" target="_blank" rel="noopener">回运维工作台</a><a id="direct" target="_blank" rel="noopener">单独打开当前原生 Session</a></div>
 <p id="progress" role="status">正在读取事件…</p><p id="notice" role="status"></p><div id="trail" aria-label="真实执行阶段"></div><p id="identity"></p>
 <details><summary>两个界面的分工与跟随方式</summary><small>此栏显示平台处理状态和真实 case / attempt / SessionID。等待 CI、构建和发布时保留上一轮原生轨迹；新 SDK 执行开始后切换到它自己的 Session。选择历史阶段会暂停自动切换，点击“继续跟随”恢复。原生轨迹来自官方 Core 记录，平台事件不转换成 Span。</small></details></header>
@@ -16,7 +16,8 @@ function node(tag,text){const n=document.createElement(tag);n.textContent=text;r
 function resize(){document.documentElement.style.setProperty('--head',$('#header').offsetHeight+'px')}
 new ResizeObserver(resize).observe($('#header'));
 function pause(reason){navigationEpoch++;following=false;$('#follow').textContent='继续跟随最新阶段';$('#notice').textContent=reason||'正在回看历史，后续执行不会抢走当前页面。'}
-function identity(c,run){const box=$('#identity');box.dataset.caseId=c?.id||'';box.dataset.attemptId=run?.attempt_id||'';box.dataset.sessionId=shownSid||'';box.dataset.following=String(following);box.textContent='case '+(c?.id||'—')+' · attempt '+(run?.attempt_id||'等待创建')+' · Session '+(shownSid||'等待创建')}
+Object.assign(labels,{REPAIR_STARTING:'ADX 正在按需创建沙箱，等待九问启动',VERIFY_STARTING:'等待沙箱接受发布后复核任务',TRACE_PROBE_STARTING:'ADX 正在按需创建沙箱，尚未开始模型执行'});
+function identity(c,run){const box=$('#identity');box.dataset.caseId=c?.id||'';box.dataset.attemptId=run?.attempt_id||c?.attempt_id||'';box.dataset.sessionId=shownSid||'';box.dataset.following=String(following);box.textContent='case '+(c?.id||'—')+' · attempt '+(run?.attempt_id||c?.attempt_id||'等待创建')+' · Session '+(shownSid||'等待创建')+(c?.execution_binding?' · Binding '+c.execution_binding.binding_id+' · 沙箱 '+(c.execution_binding.environment_id||c.execution_binding.allocation_state):'')}
 async function show(c,run){
  if(!run)return;
  if(shownSid===run.session_id)return;

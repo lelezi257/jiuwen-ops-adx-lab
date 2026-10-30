@@ -11,7 +11,7 @@ from fastapi import FastAPI, Header, HTTPException
 from lab.common import DATA, all_objects, get, init_store, now, put
 from lab.execution_context import grant
 
-CONTROL = os.getenv("OPS_CONTROL_URL", "http://172.29.0.2:8080")
+CONTROL = os.getenv("OPS_CONTROL_URL", "http://172.29.0.254:8082")
 lock = asyncio.Lock()
 tasks = set()
 capabilities = None
@@ -35,6 +35,14 @@ async def authorize(value):
         if response.status_code != 200:
             raise HTTPException(response.status_code, "Execution grant rejected by broker")
         return response.json()
+
+
+def require_owned_case(case):
+    expected = os.getenv("OPS_CASE_ID")
+    if not expected:
+        raise HTTPException(503, "Environment has no fixed case identity")
+    if case["id"] != expected:
+        raise HTTPException(403, "Grant belongs to a different case environment")
 
 
 async def execute(case, token):
@@ -96,6 +104,7 @@ def ready():
 async def accept(body: dict, authorization: str = Header(default="", alias="X-OPS-Execution-Grant")):
     ready()
     case = await authorize(authorization)
+    require_owned_case(case)
     if any(body.get(k) != case.get(k if k != "case_id" else "id") for k in ("case_id", "attempt_id", "phase")):
         raise HTTPException(403, "Execution identity does not match grant")
     if case["cancelled"]:
@@ -122,6 +131,7 @@ async def accept(body: dict, authorization: str = Header(default="", alias="X-OP
 @app.get("/runs/{aid}")
 async def status(aid: str, authorization: str = Header(default="", alias="X-OPS-Execution-Grant")):
     case = await authorize(authorization)
+    require_owned_case(case)
     if case["attempt_id"] != aid:
         raise HTTPException(403, "Execution identity does not match grant")
     item = get("execution", aid)
@@ -133,6 +143,7 @@ async def status(aid: str, authorization: str = Header(default="", alias="X-OPS-
 @app.post("/runs/{aid}/cancel")
 async def cancel(aid: str, authorization: str = Header(default="", alias="X-OPS-Execution-Grant")):
     case = await authorize(authorization)
+    require_owned_case(case)
     if case["attempt_id"] != aid:
         raise HTTPException(403, "Execution identity does not match grant")
     async with httpx.AsyncClient(timeout=15, trust_env=False) as client:

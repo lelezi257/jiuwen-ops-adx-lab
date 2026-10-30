@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "target": "linux-arm64",
+  "adx_revision": "a88659db6779538fba5337025c8bc09f530b044d",
+  "adx_source": "https://gitcode.com/openJiuwen/agent-dx.git",
+  "sandboxd_revision": "b5dab2958183faa8bcf04955eef7b0ae1c9b10ef",
+  "release": "https://github.com/lelezi257/jiuwen-ops-adx-lab/releases/tag/infra-20261030-arm64",
+  "assets": [
+    {
+      "name": "adx-release-a88659db-arm64.tar.gz",
+      "sha256": "385c21e6a10f45b99ae75f61c0bab54e3ec42ade292d8e33f5f6744d2e11935a",
+      "directory": "adx-release-a88659db"
+    },
+    {
+      "name": "backend-arm64-b5dab295.tar.gz",
+      "sha256": "9aa9a204426c2afc68c2a634e055a9e2aaa12869e86b73f16cb7de0ee3b9c5d0",
+      "directory": "backend"
+    }
+  ]
+}

@@ -1,4 +1,9 @@
-"""Read-only official recording roots; stable per-Session links, never global rebinding."""
+"""Read-only official roots; stable per-case readers, never global rebinding."""
+import asyncio
+from collections import OrderedDict
+from concurrent.futures import ProcessPoolExecutor
+import multiprocessing
+from lab.recording_reader import initialize, read
 from pathlib import Path
 
 from gateway.common.protocol_ids import validate_session_id
@@ -15,6 +20,8 @@ class RecordingIndex:
         self.owners = {}
         self.hosts = {}
         self.blobs = {}
+        self.paths = {}
+        self.readers = OrderedDict()
 
     def refresh(self):
         for directory in self.root.glob("*/swarm/agent/sessions/*"):
@@ -31,12 +38,36 @@ class RecordingIndex:
             if sid in self.owners and self.owners[sid] != root:
                 raise RuntimeError("Session identity collision across case recording roots")
             self.owners[sid] = root
-            link = self.sessions / sid
-            if link.is_symlink():
-                if link.resolve() != resolved:
-                    raise RuntimeError("Session recording link changed")
-            elif not link.exists():
-                link.symlink_to(directory, target_is_directory=True)
+            self.paths[sid] = directory
+
+    async def read(self, operation, sid, params=None):
+        if not self.exists(sid):
+            raise ValueError("Official Session recording is not available")
+        root = self.owners[sid]
+        if root not in self.readers:
+            # The official lifecycle guard rejects per-Session symlinks.
+            # A fixed, per-case sessions DIRECTORY link preserves real children
+            # and lets the official module write its own logs outside recordings.
+            facade = self.state / "readers" / root.parent.name
+            (facade / "agent").mkdir(parents=True, exist_ok=True)
+            sessions = facade / "agent/sessions"
+            if sessions.is_symlink():
+                if sessions.resolve() != (root / "agent/sessions").resolve():
+                    raise RuntimeError("Per-case reader root changed")
+            elif not sessions.exists():
+                sessions.symlink_to(root / "agent/sessions", target_is_directory=True)
+            self.readers[root] = ProcessPoolExecutor(max_workers=1,
+                mp_context=multiprocessing.get_context("spawn"), initializer=initialize, initargs=(str(facade),))
+        self.readers.move_to_end(root)
+        while len(self.readers) > 3:
+            _, stale = self.readers.popitem(last=False)
+            stale.shutdown(wait=False)
+        return await asyncio.get_running_loop().run_in_executor(self.readers[root], read, operation, sid, params or {})
+
+    def close(self):
+        for pool in self.readers.values():
+            pool.shutdown(wait=False)
+        self.readers.clear()
 
     def exists(self, sid):
         validate_session_id(sid)

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 os.environ.setdefault("LAB_DATA", tempfile.mkdtemp(prefix="ops-adx-tests-"))
 from fastapi.testclient import TestClient
 from lab import common, control, execution_auth, execution_host
+from lab.broker_app import create_app
 
 
 class AdxExecutionBoundaries(unittest.TestCase):
@@ -35,7 +36,7 @@ class AdxExecutionBoundaries(unittest.TestCase):
 
     def test_readonly_execution_cannot_write_even_if_sandbox_requests_it(self):
         token = execution_auth.issue(self.case)
-        client = TestClient(control.app)
+        client = TestClient(create_app())
         with patch("lab.execution_broker.call") as upstream:
             response = client.post("/execution/tools/write_source", json={"case_id": "case-other"},
                                    headers={"Authorization": "Bearer " + token})
@@ -45,13 +46,13 @@ class AdxExecutionBoundaries(unittest.TestCase):
     def test_superseded_execution_cannot_use_tools_or_submit_results(self):
         token = execution_auth.issue(self.case)
         common.put("case", self.case["id"], {**self.case, "attempt_id": "attempt-next"})
-        response = TestClient(control.app).post("/execution/result", json={"attempt_id": "attempt-first"},
+        response = TestClient(create_app()).post("/execution/result", json={"attempt_id": "attempt-first"},
                                               headers={"Authorization": "Bearer " + token})
         self.assertEqual(response.status_code, 409)
 
     def test_duplicate_submission_starts_sdk_only_once(self):
         body = {"case_id": self.case["id"], "attempt_id": self.case["attempt_id"], "phase": self.case["phase"]}
-        with patch("lab.execution_host.ready"), patch("lab.execution_host.authorize", new=AsyncMock(return_value=self.case)), \
+        with patch.dict(os.environ, {"OPS_CASE_ID": self.case["id"]}), patch("lab.execution_host.ready"), patch("lab.execution_host.authorize", new=AsyncMock(return_value=self.case)), \
                 patch("lab.execution_host.execute", new=AsyncMock()) as execute:
             client = TestClient(execution_host.app)
             first = client.post("/runs", json=body, headers={"X-OPS-Execution-Grant": "Bearer scoped"})
@@ -64,3 +65,13 @@ class AdxExecutionBoundaries(unittest.TestCase):
         with patch.dict(os.environ, {"OPS_EXECUTION_BACKEND": "adx"}):
             with self.assertRaises(Exception):
                 control.claim({})
+
+    def test_broker_does_not_expose_workbench_or_other_cases(self):
+        client = TestClient(create_app())
+        for path in ("/api/cases", "/api/status", "/api/cases/case-other", "/openapi.json"):
+            self.assertEqual(client.get(path).status_code, 404)
+
+    def test_valid_grant_cannot_be_used_in_a_different_case_sandbox(self):
+        with patch.dict(os.environ, {"OPS_CASE_ID": "case-other"}):
+            with self.assertRaises(Exception):
+                execution_host.require_owned_case(self.case)

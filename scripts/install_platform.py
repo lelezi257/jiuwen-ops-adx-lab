@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Install pinned, verified artifacts on this project's dedicated VM only."""
 import argparse
+import hashlib
 import ipaddress
 import json
 import os
@@ -61,6 +62,12 @@ def main():
     if subprocess.run(["systemctl", "is-active", "--quiet", "ops-adx-platform"]).returncode == 0:
         raise SystemExit("Platform is already active; inspect it rather than reinstalling")
     run("bash", args.release / "install.sh", "--prefix", PREFIX, "--bin-dir", PREFIX / "bin")
+    manifest = json.loads((args.backend / "manifest.json").read_text())
+    for relative, expected in manifest["files"].items():
+        source = args.backend / relative
+        source.resolve().relative_to(args.backend.resolve())
+        if hashlib.sha256(source.read_bytes()).hexdigest() != expected:
+            raise SystemExit("Pinned backend digest mismatch: " + relative)
     shutil.copytree(args.backend, BACKEND, dirs_exist_ok=True)
     CONFIG.mkdir(parents=True, exist_ok=True, mode=0o700)
     certificates()
@@ -73,10 +80,10 @@ def main():
         ipaddress.IPv4Address("10.88.0.2"), ipaddress.IPv4Address("10.88.3.255"))]
     network = {"sandbox_cidrs": sandbox_ranges, "internal_cidrs": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
                "public_egress": True, "egress_allow": [
-                   {"cidr": "172.29.0.2/32", "protocol": "tcp", "ports": {"first": 8080, "last": 8080}},
+                   {"cidr": "172.29.0.254/32", "protocol": "tcp", "ports": {"first": 8082, "last": 8082}},
                    *[{"cidr": "10.88.0.1/32", "protocol": proto, "ports": {"first": 53, "last": 53}}
                      for proto in ("tcp", "udp")]]}
-    protected(CONFIG / "agent.json", json.dumps({"timeout_seconds": 120, "embedded": {
+    protected(CONFIG / "agent.json", json.dumps({"timeout_seconds": 300, "embedded": {
         "redis_url": "redis://127.0.0.1:6379/", "namespace": "ops-adx-agent", "sandbox_network": network}}, indent=2))
     deployment = yaml.safe_load((ROOT / "config/adx-deployment.example.yaml").read_text().replace("/opt/adx", str(PREFIX)))
     deployment["namespace"] = "ops-adx-platform"
@@ -96,14 +103,16 @@ def main():
     backend_config.mkdir(mode=0o700, exist_ok=True)
     for name in ("sandboxd-minimal.toml", "oss.json", "registry.json", "oss_auths.json", "registry_auths.json"):
         shutil.copyfile(BACKEND / name, backend_config / name)
+    shutil.copyfile(ROOT / "config/sandboxd.toml", backend_config / "sandboxd-minimal.toml")
     for directory in ("/var/lib/jiuwen-ops-adx", "/run/jiuwen-ops-adx-sandboxd"):
         Path(directory).mkdir(parents=True, exist_ok=True)
+    run("python3", ROOT / "scripts/configure_network.py", "--install")
     run("modprobe", "br_netfilter")
     run("modprobe", "erofs")
     run("sysctl", "-w", "net.ipv4.ip_forward=1", "net.bridge.bridge-nf-call-iptables=1", "net.bridge.bridge-nf-call-ip6tables=1")
     units = {
-        "ops-adx-sandboxd": "[Unit]\nDescription=Ops ADX pinned sandboxd\nAfter=network-online.target\n[Service]\nType=simple\nExecStart=" + str(BACKEND / "sandboxd") + " -config /etc/jiuwen-ops-adx-backend/sandboxd-minimal.toml -socket /run/jiuwen-ops-adx-sandboxd/sandboxd.sock -log-file /var/log/jiuwen-ops-adx-sandboxd.log\nRestart=on-failure\nDelegate=yes\nLimitNOFILE=1048576\n[Install]\nWantedBy=multi-user.target\n",
-        "ops-adx-platform": "[Unit]\nDescription=Ops ADX platform supervisor\nAfter=network-online.target ops-adx-sandboxd.service\n[Service]\nType=simple\nExecStart=" + str(PREFIX / "current/bin/adxctl") + " -c " + str(CONFIG / "deployment.yaml") + " run\nRestart=on-failure\nDelegate=yes\nTimeoutStopSec=120\n[Install]\nWantedBy=multi-user.target\n"
+        "ops-adx-sandboxd": "[Unit]\nDescription=Ops ADX pinned sandboxd\nAfter=network-online.target\n[Service]\nType=simple\nRuntimeDirectory=jiuwen-ops-adx-sandboxd\nExecStart=" + str(BACKEND / "sandboxd") + " -config /etc/jiuwen-ops-adx-backend/sandboxd-minimal.toml -socket /run/jiuwen-ops-adx-sandboxd/sandboxd.sock -log-file /var/log/jiuwen-ops-adx-sandboxd.log\nRestart=on-failure\nDelegate=yes\nLimitNOFILE=1048576\n[Install]\nWantedBy=multi-user.target\n",
+        "ops-adx-platform": "[Unit]\nDescription=Ops ADX platform supervisor\nAfter=network-online.target ops-adx-sandboxd.service ops-adx-network.service\nRequires=ops-adx-network.service\n[Service]\nType=simple\nExecStart=" + str(PREFIX / "current/bin/adxctl") + " -c " + str(CONFIG / "deployment.yaml") + " run\nRestart=on-failure\nDelegate=yes\nTimeoutStopSec=120\n[Install]\nWantedBy=multi-user.target\n"
     }
     for name, value in units.items():
         Path("/etc/systemd/system/" + name + ".service").write_text(value)

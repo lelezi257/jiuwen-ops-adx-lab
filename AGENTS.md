@@ -11,7 +11,7 @@
 - Maintain README quickstart, RUNBOOK and official source/version links when interfaces change.
 
 # Independent ADX experiment
-- This is jiuwen-ops-adx-lab, not jiuwen-ops-adx-lab. Never edit/restart/delete the old repository, VM, history or volumes as part of this project.
+- This is jiuwen-ops-adx-lab, separate from jiuwen-ops-lab. Never edit/restart/delete the old repository, VM, history or volumes as part of this project.
 - Use a dedicated VM, Compose project, port range and public GitHub repository.
 - Preserve the pinned official ADX activation and SDK execution chain; no direct Docker sandbox substitute.
 - Keep platform credentials in control; sandbox execution credentials are per case/attempt and tool grants are server enforced.

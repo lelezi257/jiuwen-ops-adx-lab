@@ -32,13 +32,14 @@ s['registry']={'image':'${REGISTRY_MIRROR_PREFIX:-}library/registry:2.8.3','rest
 volumes=['control','evidence','delivery','runner','probe','collector','work','postgres','logs','prometheus','loki','registry','observer']
 compose={'name':'jiuwen-ops-adx-lab','services':s,'volumes':{v:{} for v in volumes},'networks':{'ops':{},'app':{}},'secrets':{k:{'file':'.local/secrets/'+k} for k in ['control_token','runner_token','db_password','verify_db_password','github_token']}}
 # ADX mode: runner is an image build target, never a prestarted service.
+s['control']['command']=['python','/app/scripts/start_control.py']
 compose['services']['runner']={k:s['runner'][k] for k in ('image','build')}
 compose['services']['runner']['profiles']=['build-only']
 s['control']['environment'].update(OPS_EXECUTION_BACKEND='adx',OPS_CASES_ROOT='/cases',ADX_GATEWAY='${ADX_GATEWAY:-https://host.docker.internal:19443}',ADX_TEMPLATE='ops-order',ADX_TEMPLATE_VERSION='${ADX_TEMPLATE_VERSION:-}',ADX_CA_FILE='/run/adx/public-ca.pem',OPS_MAX_EXECUTIONS='${OPS_MAX_EXECUTIONS:-1}')
 s['control']['volumes']+=['./.local/cases:/cases','./.local/adx-client:/run/adx:ro']
 s['control']['secrets']+=['execution_signing_key','adx_tenant_token']
 s['control']['extra_hosts']=['host.docker.internal:host-gateway']
-s['control']['networks']={'ops':{'ipv4_address':'172.29.0.2'}}
+s['control']['networks']={'ops':{'ipv4_address':'172.29.0.254'}}
 s['native-web']['environment']['LAB_RECORDINGS']='/recordings'
 s['native-web']['volumes']=['observer:/data','./.local/cases:/recordings:ro']
 compose['networks']['ops']['ipam']={'config':[{'subnet':'172.29.0.0/24'}]}

@@ -1,0 +1,41 @@
+# Deployment sample, not a validated live configuration. Keep the ADX managed sandbox policy.
+rootDir = "/var/lib/jiuwen-ops-adx/sandboxd/root"
+storeDir = "/var/lib/jiuwen-ops-adx/sandboxd/store"
+[plugin.network]
+ip_range = "10.88.0.1/22"
+nat_backend = "iptables"
+enable_network_acl = true
+enable_local_dnat = false
+[plugin.resource]
+cgroup_cache_size = 1
+interface_cache_size = 1
+disable_cgroup = false
+cpu_limit_mode = "quota"
+cgroup_root_name = "/jiuwen-ops-adx-sandboxd"
+max_instance_num = 8
+[plugin.runtime]
+resolv_conf_path = "/run/systemd/resolve/resolv.conf"
+direct_resolv_conf_path = "/run/systemd/resolve/resolv.conf"
+image_lib_dir = "/var/lib/jiuwen-ops-adx/sandboxd/images"
+filestore_dir = "/var/lib/jiuwen-ops-adx/sandboxd/filestore"
+filestore_xfs_enabled = false
+filestore_overcommit_ratio = 1.0
+loop_device_dir = "/dev"
+overlay_tmpfs_size = "128M"
+[plugin.runtime.runsc]
+platform = "systrap"
+[plugin.runtime.runc]
+state_root = "/run/jiuwen-ops-adx-sandboxd/runc"
+shim_binary = "/opt/jiuwen-ops-adx-backend/runc-shim"
+[plugin.runtime.runtime_binary]
+runsc = "/opt/jiuwen-ops-adx-backend/runsc"
+runc = "/opt/jiuwen-ops-adx-backend/runc"
+[plugin.image]
+root = "/var/lib/jiuwen-ops-adx/sandboxd/image-manager"
+distill_fs_bin = "/opt/jiuwen-ops-adx-backend/distill_fs"
+oss_template = "/etc/jiuwen-ops-adx-backend/oss.json"
+nydus_template = "/etc/jiuwen-ops-adx-backend/registry.json"
+nydus_suffix = "_nydus_v3"
+oss_auths_path = "/etc/jiuwen-ops-adx-backend/oss_auths.json"
+registry_auths_path = "/etc/jiuwen-ops-adx-backend/registry_auths.json"
+cgroup_memory_limit = "0"

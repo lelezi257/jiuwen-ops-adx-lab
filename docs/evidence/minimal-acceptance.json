@@ -1,0 +1,153 @@
+{
+  "case": {
+    "id": "trace-probe-99912656991d46a0",
+    "kind": "trace_probe",
+    "created_at": 1793369878.6358016,
+    "observed_release": "release-baseline",
+    "observed_sha": "ca9ce7dcc7026b645e2bb1e3588c3b0ecf716ff2",
+    "trigger": {
+      "source": "operator_trace_probe"
+    },
+    "cancelled": false,
+    "attempt": 1,
+    "feedback": null,
+    "state": "TRACE_PROBE_COMPLETED",
+    "updated_at": 1793369913.051085,
+    "execution_binding": {
+      "incarnation": 1,
+      "template": "ops-order",
+      "template_version": "5",
+      "binding_id": "trace-probe-99912656991d46a0-e1",
+      "allocation_state": "RELEASED",
+      "recording_root_id": "trace-probe-99912656991d46a0",
+      "environment_id": "adx-dfdff743-8e7e-4ca2-9035-54c0c6b884fb",
+      "released_at": 1793369913.0509562
+    },
+    "phase": "trace_probe",
+    "attempt_id": "attempt-53e04e1ff15f44f0",
+    "lease_at": 1793369902.096504,
+    "dispatch": {
+      "state": "ACCEPTED",
+      "accepted_at": 1793369882.0198817,
+      "execution_id": "attempt-53e04e1ff15f44f0"
+    },
+    "sdk_runs": {
+      "attempt-53e04e1ff15f44f0": {
+        "attempt_id": "attempt-53e04e1ff15f44f0",
+        "phase": "trace_probe",
+        "session_id": "process_cli_1a18d2cd3bd_ad7416a4fbe5",
+        "request_id": "78dab21c-d08c-4514-b6e9-29e4fdf09b17",
+        "started_at": 1793369887.717149
+      }
+    },
+    "agent_result": {
+      "schema_version": "0.1",
+      "type": "result",
+      "sequence": 161,
+      "request_id": "78dab21c-d08c-4514-b6e9-29e4fdf09b17",
+      "session_id": "process_cli_1a18d2cd3bd_ad7416a4fbe5",
+      "status": "completed",
+      "exit_code": 0,
+      "output": "{\"finding\":\"已完成 trace_probe 只读取证，未做任何修复、PR 或部署。Prometheus 2 分钟增量为：/version、/orders、/orders/{id} 三条路径均为 200，各约 221.2 次；/orders 的 422 计数为 0，说明无客户端校验错误、也无 5xx 错误，服务健康。Loki 近 5 分钟（1793369592~1793369892）100 条日志全部为 status 200，duration_ms 范围约 0.17~7.92ms，error 字段均为 null，每条记录的 source_sha=ca9ce7dcc7026b645e2bb1e3588c3b0ecf716ff2、release_id=release-baseline，与案例声明的 incident_release/incident_source_sha 完全一致；流标签 detected_level=error 但实际消息无错误内容，属于噪声，不构成异常证据。get_running_release 显示容器 c7b95052e6b4465679aec23d490238523bdd3fa57b392ecdcb0bcd43b039b90c 运行中，镜像 digest sha256:7f48d4541fccde30776ae4ce17ab3bd4e4fbec894e97bdbdcaadbe8963b957ab 与 release ledger 及 known_good 记录一致，ledger 状态 ready，known_good 已由 verify-b54f98aea1494fdd 于 1793368943.95 验证，consistent=true。综上，当前服务健康、发布身份与基线一致且三方（运行时/台账/已知良好）一致，证据充分且相互印证；本阶段仅为探测，无需人工介入，pr_number 与 candidate_sha 均为 null。\",\"evidence_ids\":[\"ev-ff83c1e6d0374ec7\",\"ev-950e2f8d66884283\"],\"pr_number\":null,\"candidate_sha\":null,\"needs_human\":false}",
+      "output_json": {
+        "finding": "已完成 trace_probe 只读取证，未做任何修复、PR 或部署。Prometheus 2 分钟增量为：/version、/orders、/orders/{id} 三条路径均为 200，各约 221.2 次；/orders 的 422 计数为 0，说明无客户端校验错误、也无 5xx 错误，服务健康。Loki 近 5 分钟（1793369592~1793369892）100 条日志全部为 status 200，duration_ms 范围约 0.17~7.92ms，error 字段均为 null，每条记录的 source_sha=ca9ce7dcc7026b645e2bb1e3588c3b0ecf716ff2、release_id=release-baseline，与案例声明的 incident_release/incident_source_sha 完全一致；流标签 detected_level=error 但实际消息无错误内容，属于噪声，不构成异常证据。get_running_release 显示容器 c7b95052e6b4465679aec23d490238523bdd3fa57b392ecdcb0bcd43b039b90c 运行中，镜像 digest sha256:7f48d4541fccde30776ae4ce17ab3bd4e4fbec894e97bdbdcaadbe8963b957ab 与 release ledger 及 known_good 记录一致，ledger 状态 ready，known_good 已由 verify-b54f98aea1494fdd 于 1793368943.95 验证，consistent=true。综上，当前服务健康、发布身份与基线一致且三方（运行时/台账/已知良好）一致，证据充分且相互印证；本阶段仅为探测，无需人工介入，pr_number 与 candidate_sha 均为 null。",
+        "evidence_ids": [
+          "ev-ff83c1e6d0374ec7",
+          "ev-950e2f8d66884283"
+        ],
+        "pr_number": null,
+        "candidate_sha": null,
+        "needs_human": false
+      },
+      "error": null,
+      "usage": {
+        "input_tokens": 75722,
+        "output_tokens": 614,
+        "total_tokens": 76336,
+        "cache_tokens": 56960,
+        "cache_hit_rate": "75.2%",
+        "total_cost": 0.021374,
+        "model_calls": 5
+      }
+    },
+    "cleanup": {
+      "state": "CONFIRMED",
+      "confirmed_at": 1793369913.050958
+    },
+    "binding_history": [
+      {
+        "incarnation": 1,
+        "template": "ops-order",
+        "template_version": "5",
+        "binding_id": "trace-probe-99912656991d46a0-e1",
+        "allocation_state": "RELEASED",
+        "recording_root_id": "trace-probe-99912656991d46a0",
+        "environment_id": "adx-dfdff743-8e7e-4ca2-9035-54c0c6b884fb",
+        "released_at": 1793369913.0509562
+      }
+    ]
+  },
+  "sdk_status": {
+    "status": "completed",
+    "exit_code": 0,
+    "session_id": "process_cli_1a18d2cd3bd_ad7416a4fbe5",
+    "request_id": "78dab21c-d08c-4514-b6e9-29e4fdf09b17",
+    "usage": {
+      "input_tokens": 75722,
+      "output_tokens": 614,
+      "total_tokens": 76336,
+      "cache_tokens": 56960,
+      "cache_hit_rate": "75.2%",
+      "total_cost": 0.021374,
+      "model_calls": 5
+    }
+  },
+  "tools": [
+    {
+      "name": "query_metrics",
+      "call_id": "762c8f5368e540268347fa66451943ee",
+      "evidence_id": "ev-ff83c1e6d0374ec7"
+    },
+    {
+      "name": "query_logs",
+      "call_id": "c9f5b77d6b9348e18aca7f3ac83c1fc7",
+      "evidence_id": "ev-950e2f8d66884283"
+    },
+    {
+      "name": "get_running_release",
+      "call_id": "30a544f80aee430fb047eff6e265f633",
+      "evidence_id": null
+    },
+    {
+      "name": "read_evidence",
+      "call_id": "4adfd13256934a13a22332ceff7d95fe",
+      "evidence_id": "ev-ff83c1e6d0374ec7"
+    }
+  ],
+  "observer_checks": {
+    "session_id": "process_cli_1a18d2cd3bd_ad7416a4fbe5",
+    "checks": {
+      "actual_session_metadata": true,
+      "chat.send_rejected": true,
+      "config.set_rejected": true,
+      "session.delete_rejected": true,
+      "invalid_session_rejected": true,
+      "hint_matches_native_store": true,
+      "negative_revision_rejected": true,
+      "foreign_origin_rejected": true,
+      "foreign_websocket_rejected": true,
+      "observer_has_no_execution_credentials": true
+    },
+    "native_hints": [
+      {
+        "session_id": "process_cli_1a18d2cd3bd_ad7416a4fbe5",
+        "trace_id": "2be22e798b6cfca3a39dc398bc448193",
+        "revision": 34,
+        "frame_seq": 0,
+        "store_epoch": "76e2c0da98fb4510833720e3bd17db56"
+      }
+    ],
+    "passed": true
+  },
+  "qualification": "minimal real execution and observation, not full order recovery"
+}

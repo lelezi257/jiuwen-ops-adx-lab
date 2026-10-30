@@ -182,6 +182,10 @@ def approve(cid:str):
  c=case(cid)
  if c['state']!='READY_TO_MERGE':raise HTTPException(409,'Not awaiting delivery authorization')
  c['approved']=True;save(c);return c
+@app.post('/api/cases/{cid}/release-allocation',dependencies=[Depends(operator)])
+def release_allocation(cid:str):
+ from lab.adx_dispatch import release_terminal
+ return release_terminal(cid)
 @app.post('/api/experiment/{action}',dependencies=[Depends(operator)])
 def experiment(action:str,body:dict):
  if action=='bootstrap':return call(DELIVERY,'/ops/bootstrap',body,timeout=180)
@@ -280,6 +284,3 @@ def retry(cid:str):
   elif not cur['consistent'] or cur['runtime']['source_sha']!=c['observed_sha'] or c.get('merge'):raise HTTPException(409,'External state changed; investigate and reconcile before retry')
   c['cancelled']=False;c['attempt_id']=ident('retry-reservation');c['feedback']={'previous_result':c.get('agent_result'),'operator_retry':True};put('case',cid,c)
   return save(c,target,'Operator requested new attempt; prior attempts retained; no replay of completed delivery')
-
-from lab.execution_broker import install as install_execution_broker
-install_execution_broker(app)

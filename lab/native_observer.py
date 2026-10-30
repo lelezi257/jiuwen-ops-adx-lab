@@ -30,7 +30,7 @@ index=RecordingIndex(RECORDINGS,ROOT)
 async def metadata(sid,user_id=None):
  validate_session_id(sid)
  if not index.exists(sid):raise ValueError('Official Session not found')
- return await get_session_metadata_async(sid,cache_bust=True,enable_writeback=False)
+ return await index.read('metadata',sid)
 
 class ReadOnlyChannel(WebChannel):
  async def _handle_raw_message(self,ws,raw,query):
@@ -64,7 +64,7 @@ async def dispatch(method,p,ws,req_id):
  if method=='session.list':
   items=[]
   index.refresh()
-  for path in sorted(index.sessions.glob('*'),key=lambda x:x.stat().st_mtime,reverse=True):
+  for path in sorted(index.paths.values(),key=lambda x:x.stat().st_mtime,reverse=True):
    if not path.is_dir():continue
    try:
     item=await metadata(path.name)
@@ -77,12 +77,12 @@ async def dispatch(method,p,ws,req_id):
  if method=='session.get_metadata':return await metadata(sid)
  if method=='session.switch':return {'session_id':sid,**(await metadata(sid))}
  if method=='history.get':
-  batch=await asyncio.to_thread(load_history_query,p)
+  batch=await index.read('history',sid,p)
   if batch is None:raise ValueError('Durable history not available yet; retry when writer commits')
   common={k:v for k,v in batch.items() if k!='messages'}
   common.update(session_id=sid,cursor=p.get('cursor'),request_id=req_id)
-  for index,record in enumerate(stream_history_records(batch.get('messages',[]),use_split=True)):
-   await channel.send_event(ws,'history.message',{**common,'message':record},seq=index,stream_id=req_id)
+  for sequence,record in enumerate(stream_history_records(batch.get('messages',[]),use_split=True)):
+   await channel.send_event(ws,'history.message',{**common,'message':record},seq=sequence,stream_id=req_id)
   await channel.send_event(ws,'history.message',{**common,'status':'done'},stream_id=req_id)
   return {'session_id':sid,'streamed':True}
  raise ValueError('Unsupported read')
@@ -122,7 +122,8 @@ async def watch():
 async def lifespan(app):
  task=asyncio.create_task(watch())
  try:yield
- finally:task.cancel()
+ finally:
+  task.cancel();index.close()
 app=FastAPI(lifespan=lifespan)
 attach_trajectory_routes(app,channel,metadata_loader=metadata,fetch=index.call)
 @app.get('/api/ops/state')
