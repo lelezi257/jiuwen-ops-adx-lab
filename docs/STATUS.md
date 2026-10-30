@@ -5,6 +5,7 @@
 - 新仓库/VM：`jiuwen-ops-adx-lab`；旧项目仍为HEALTHY、17个历史事件，旧HEAD及原有工作区修改未动。
 - VM：4 CPU / 8 GiB / 40 GiB；工作台19780、原生观测19781、业务19080、ADX19443。
 - ADX固定a88659db；sandboxd固定b5dab295；runsc systrap，ACL保持启用；SDK/Swarm/Core固定版本见framework.lock。
+- 最终部署模板6另跑真实只读探针`trace-probe-3a2dfc8b26d74d08`通过：新Environment按需创建、5次真实模型调用、4次工具调用、SDK completed/exit 0；释放确认后原生revision34仍可读。完整订单案例使用模板5，两次验收边界分别保留。详见[最终部署探针](evidence/final-deployment-minimal.json)。
 - 53项产品边界、回执身份、复核上下文和产物完整性测试通过。
 - 真实PR [#1](https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/1)；[可信CI](https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41072564084)通过；merge SHA `fe17caf809f061f8512101b39b173ecfceded158`；[双架构构建](https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41073187806)通过。
 - 实际发布digest `sha256:6f0b9da05b46452445893d8711e021bb206a352b28f990edff6acaa0e389073a`。独立验证两个60秒窗口，各窗口coupon/no_coupon均109次，全部200、金额正确、SQL行一致；历史订单和非法输入语义均通过。

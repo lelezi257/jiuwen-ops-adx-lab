@@ -1,0 +1,135 @@
+{
+  "qualification": "Final deployment minimum real SDK qualification; separate from the template-5 full-order case",
+  "case": {
+    "id": "trace-probe-3a2dfc8b26d74d08",
+    "state": "TRACE_PROBE_COMPLETED",
+    "attempt_id": "attempt-4e35614b36914865",
+    "execution_binding": {
+      "incarnation": 1,
+      "template": "ops-order",
+      "template_version": "6",
+      "binding_id": "trace-probe-3a2dfc8b26d74d08-e1",
+      "allocation_state": "RELEASED",
+      "recording_root_id": "trace-probe-3a2dfc8b26d74d08",
+      "environment_id": "adx-c087e22c-c853-46ca-b1ea-be205da4989b",
+      "released_at": 1793374018.4012873
+    },
+    "sdk_runs": {
+      "attempt-4e35614b36914865": {
+        "attempt_id": "attempt-4e35614b36914865",
+        "phase": "trace_probe",
+        "session_id": "process_cli_1a18d6b8117_2a7ce4e56c98",
+        "request_id": "03e28bc8-3eaa-4478-b9bc-47a611c922b2",
+        "started_at": 1793373995.3346534,
+        "binding_id": "trace-probe-3a2dfc8b26d74d08-e1",
+        "environment_id": "adx-c087e22c-c853-46ca-b1ea-be205da4989b"
+      }
+    },
+    "cleanup": {
+      "state": "CONFIRMED",
+      "confirmed_at": 1793374018.4012897
+    }
+  },
+  "sdk_receipts": [
+    {
+      "session_id": "process_cli_1a18d6b8117_2a7ce4e56c98",
+      "request_id": "03e28bc8-3eaa-4478-b9bc-47a611c922b2",
+      "status": "completed",
+      "exit_code": 0,
+      "error": null,
+      "usage": {
+        "input_tokens": 76498,
+        "output_tokens": 577,
+        "total_tokens": 77075,
+        "cache_tokens": 59392,
+        "cache_hit_rate": "77.6%",
+        "total_cost": 0.021581,
+        "model_calls": 5
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "query_metrics",
+      "call_id": "2f8286cebd6c401aae78ba7f612b48a2",
+      "evidence_id": "ev-d80a755b27b4439d"
+    },
+    {
+      "name": "query_logs",
+      "call_id": "4c8369d9b3c84008b23ddc95caa73aef",
+      "evidence_id": "ev-4d36b5eaf65647d3"
+    },
+    {
+      "name": "get_running_release",
+      "call_id": "e36a65dfa224458c97466a905e2296c0",
+      "evidence_id": null
+    },
+    {
+      "name": "read_evidence",
+      "call_id": "e6dbb583e3954cc08c985a258f98fd68",
+      "evidence_id": "ev-d80a755b27b4439d"
+    }
+  ],
+  "recordings_after_release": {
+    "ready": true,
+    "sessions": [
+      {
+        "session_id": "process_cli_1a18d6b8117_2a7ce4e56c98",
+        "metadata": true,
+        "subjects": 1,
+        "revision": 34,
+        "store_epoch": "2ecf510705f84d01ab159d821b3840f4"
+      }
+    ]
+  },
+  "native_subjects": {
+    "process_cli_1a18d6b8117_2a7ce4e56c98": {
+      "schema_version": 1,
+      "session_id": "process_cli_1a18d6b8117_2a7ce4e56c98",
+      "items": [
+        {
+          "subject_id": "main",
+          "display_name": "Main Agent",
+          "kind": "main_agent",
+          "parent_id": null,
+          "record_count": 22,
+          "trace_count": 1,
+          "first_start_time_unix_nano": "1793373996671927292",
+          "last_observed_time_unix_nano": "1793374006655549308",
+          "first_revision": 1,
+          "revision": 34,
+          "has_error": false,
+          "running": false
+        }
+      ],
+      "watermark": 34,
+      "store_epoch": "2ecf510705f84d01ab159d821b3840f4"
+    }
+  },
+  "backend_sandbox_list_after_release": "ID          STATUS      RUNTIME     AGE         CREATED",
+  "native_observer_readonly_check": {
+    "session_id": "process_cli_1a18d6b8117_2a7ce4e56c98",
+    "checks": {
+      "actual_session_metadata": true,
+      "chat.send_rejected": true,
+      "config.set_rejected": true,
+      "session.delete_rejected": true,
+      "invalid_session_rejected": true,
+      "hint_matches_native_store": true,
+      "negative_revision_rejected": true,
+      "foreign_origin_rejected": true,
+      "foreign_websocket_rejected": true,
+      "observer_has_no_execution_credentials": true
+    },
+    "native_hints": [
+      {
+        "session_id": "process_cli_1a18d6b8117_2a7ce4e56c98",
+        "trace_id": "c825ab9eab3d5e3040994359bda77ca8",
+        "revision": 34,
+        "frame_seq": 0,
+        "store_epoch": "2ecf510705f84d01ab159d821b3840f4"
+      }
+    ],
+    "passed": true
+  }
+}

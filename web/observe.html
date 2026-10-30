@@ -17,7 +17,7 @@ function resize(){document.documentElement.style.setProperty('--head',$('#header
 new ResizeObserver(resize).observe($('#header'));
 function pause(reason){navigationEpoch++;following=false;$('#follow').textContent='继续跟随最新阶段';$('#notice').textContent=reason||'正在回看历史，后续执行不会抢走当前页面。'}
 Object.assign(labels,{REPAIR_STARTING:'ADX 正在按需创建沙箱，等待九问启动',VERIFY_STARTING:'等待沙箱接受发布后复核任务',TRACE_PROBE_STARTING:'ADX 正在按需创建沙箱，尚未开始模型执行'});
-function identity(c,run){const box=$('#identity');box.dataset.caseId=c?.id||'';box.dataset.attemptId=run?.attempt_id||c?.attempt_id||'';box.dataset.sessionId=shownSid||'';box.dataset.following=String(following);box.textContent='case '+(c?.id||'—')+' · attempt '+(run?.attempt_id||c?.attempt_id||'等待创建')+' · Session '+(shownSid||'等待创建')+(c?.execution_binding?' · Binding '+c.execution_binding.binding_id+' · 沙箱 '+(c.execution_binding.environment_id||c.execution_binding.allocation_state):'')}
+function identity(c,run){const box=$('#identity');box.dataset.caseId=c?.id||'';box.dataset.attemptId=run?.attempt_id||c?.attempt_id||'';box.dataset.sessionId=shownSid||'';box.dataset.following=String(following);box.textContent='case '+(c?.id||'—')+' · attempt '+(run?.attempt_id||c?.attempt_id||'等待创建')+' · Session '+(shownSid||'等待创建')+((run?.binding_id||c?.execution_binding?.binding_id)?' · Binding '+(run?.binding_id||c.execution_binding.binding_id)+' · 沙箱 '+(run?.environment_id||c?.execution_binding?.environment_id||c?.execution_binding?.allocation_state||'等待分配'):'')}
 async function show(c,run){
  if(!run)return;
  if(shownSid===run.session_id)return;
