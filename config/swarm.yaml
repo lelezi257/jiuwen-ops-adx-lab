@@ -1,0 +1,26 @@
+preferred_language: zh
+progressive_tool_enabled: false
+progressive_tool_optimize: false
+auto_memory_enabled: false
+setup_guide:
+  enabled: false
+rsi:
+  enabled: false
+models:
+  defaults:
+    - model_id: mdl_ops_lab
+      model_client_config:
+        api_base: ${API_BASE}
+        api_key: ${API_KEY}
+        model_name: ${MODEL_NAME}
+        client_provider: ${MODEL_PROVIDER:-OpenAI}
+        endpoint_profile: ${ENDPOINT_PROFILE:-openai}
+        timeout: 180
+        verify_ssl: true
+      model_config_obj: {}
+      is_default: true
+
+trajectory_ui:
+  enabled: true
+  diagnosis_enabled: true
+  retention_days: 7

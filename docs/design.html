@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Jiuwen Ops Lab 接入 Agent DX 的设计草案：按事件激活沙箱、保留官方 Process SDK、真实 Session 与轨迹、部署关系、交互和代码改动。尚未实现。">
+<title>运维 Agent × ADX｜按需执行设计 D2</title>
+<style>
+:root{--bg:#eef3f5;--paper:#fff;--ink:#19394a;--muted:#58717f;--line:#d9e4e9;--teal:#12786f;--blue:#2869a9;--amber:#a76c14;--soft:#eaf5f2}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.85 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}header{background:#173d50;color:white;padding:48px max(24px,calc((100vw - 1390px)/2));border-bottom:5px solid #6cc5ae}header h1{font-size:clamp(29px,4vw,46px);line-height:1.35;margin:12px 0 18px;letter-spacing:-.025em}header p{max-width:1000px;color:#d5e6ec;font-size:18px}.eyebrow{font-size:12px;letter-spacing:.13em;color:#afd9d8}.pills{display:flex;flex-wrap:wrap;gap:9px;margin:22px 0}.pill{font-size:12px;border:1px solid #688a99;border-radius:30px;padding:3px 12px}.pill.draft{background:#725b32;border-color:#c4a268;color:#fff0d2}.header-actions{display:flex;gap:12px;flex-wrap:wrap}.header-actions a,.header-actions button{background:transparent;color:#fff;border:1px solid #83a5b5;border-radius:7px;padding:8px 13px;font:inherit;font-size:13px;cursor:pointer}.layout{display:grid;grid-template-columns:215px minmax(0,1fr);gap:28px;max-width:1490px;margin:0 auto;padding:30px 24px}aside{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:13px}aside strong{display:block;font-size:11px;letter-spacing:.12em;color:var(--muted);margin:8px 12px}aside a{display:block;padding:8px 12px;color:#466270;border-left:3px solid transparent}aside a.active{border-color:var(--teal);background:#dfedec;color:#146d65;font-weight:650}main{min-width:0}section{background:var(--paper);border:1px solid var(--line);border-radius:13px;margin-bottom:23px;padding:30px 32px;overflow:hidden}h2{font-size:27px;line-height:1.45;margin:4px 0 10px}h3{font-size:20px;margin:24px 0 10px}h4{margin:0 0 7px;font-size:16px}p{margin:10px 0}.no{font-size:12px;color:var(--teal);font-weight:700;letter-spacing:.12em}.lead{color:var(--muted);margin:0 0 22px;font-size:17px}.note{background:#edf6f6;border-left:4px solid #4b9c9b;border-radius:4px 9px 9px 4px;padding:14px 18px;margin:20px 0}.note.warm{background:#fff5e3;border-color:#bc8c38}.note p{margin:5px 0;font-size:14px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:20px 0}.card{border:1px solid var(--line);border-radius:9px;padding:17px;background:#f8fbfc}.card p{font-size:14px}.fact,.proposal,.pending{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:650;vertical-align:middle}.fact{background:#e3f2ea;color:#226b46}.proposal{background:#e5edf9;color:#315f91}.pending{background:#fff0d3;color:#8f6319}.table{overflow:auto;border:1px solid var(--line);border-radius:9px;margin:18px 0}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.75}th,td{text-align:left;vertical-align:top;padding:12px 13px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}th{background:#eaf1f5;font-size:13px}td:first-child{font-weight:600}tbody tr:last-child td{border-bottom:0}tbody tr:nth-child(even){background:#fafcfd}code{font: .84em/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;background:#edf2f5;border-radius:4px;padding:2px 4px;overflow-wrap:anywhere}pre{font:13px/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre;overflow:auto;background:#173d50;color:#dfedf2;padding:20px;border-radius:9px}pre code{background:none;font:inherit;padding:0;color:inherit}figure{margin:22px 0}figure svg{width:100%;height:auto;display:block}figcaption,.small{font-size:13px;color:var(--muted)}.diagram{overflow:auto}.diagram svg{min-width:780px}.steps{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0}.steps button{border:1px solid #bacfd6;background:#f5f9fb;color:#345c70;font:inherit;font-size:13px;padding:7px 12px;border-radius:6px;cursor:pointer}.steps button[aria-pressed=true]{background:#196f73;color:#fff;border-color:#196f73}.stage{border:1px solid #bedbd6;background:#edf7f3;border-radius:9px;padding:20px 23px;min-height:210px}.stage h3{margin:0 0 8px}.stage dl{display:grid;grid-template-columns:95px 1fr;gap:6px 14px;font-size:14px;margin:12px 0}.stage dt{color:var(--muted)}.stage dd{margin:0;overflow-wrap:anywhere}.section-links{display:flex;flex-wrap:wrap;gap:12px;font-size:13px}.rules li{margin:8px 0}details{border:1px solid var(--line);border-radius:8px;padding:13px 16px;margin:16px 0}summary{font-weight:600;cursor:pointer}details pre{max-height:380px;overflow:auto}.source-list li{margin:12px 0;font-size:14px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}footer{max-width:1200px;margin:auto;padding:0 28px 38px;color:var(--muted);font-size:13px}:focus-visible{outline:3px solid #cf9a3c;outline-offset:3px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:1080px){.layout{grid-template-columns:180px 1fr;gap:16px;padding:22px 15px}section{padding:25px 22px}.cards{grid-template-columns:1fr}.cards .card p{margin:4px 0}}@media(max-width:760px){header{padding:30px 21px}header p{font-size:16px}.layout{display:block;padding:15px 10px}aside{position:static;max-height:215px;border:1px solid var(--line);background:#fff;border-radius:9px;margin-bottom:17px;padding:8px}section{padding:22px 18px}h2{font-size:23px}.table table{min-width:680px}.stage dl{grid-template-columns:1fr;gap:2px}.stage dd{margin-bottom:8px}.lead{font-size:16px}}@media print{body{background:white;font-size:11px}header{background:white;color:var(--ink);padding:15px;border-bottom:2px solid var(--teal)}header p,.eyebrow{color:#49636c}header h1{font-size:27px}.header-actions,aside,.steps,.stage{display:none}.pills .pill{color:#345;background:white;border-color:#abc}.layout{display:block;padding:0}section{border:0;border-radius:0;padding:18px 5px;overflow:visible;break-inside:auto}h2,h3{break-after:avoid}.table{overflow:visible}table{font-size:10px;min-width:0!important}th,td{padding:7px}figure,tr,.card{break-inside:avoid}.diagram{overflow:visible}.diagram svg{min-width:0}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}pre{white-space:pre-wrap;background:#eef3f5;color:#183449;font-size:10px}a{color:#275e84}}
+</style>
+</head>
+<body>
+<header>
+<div class="eyebrow">JIUWEN OPS LAB · AGENT DISTRIBUTED EXECUTION · DESIGN D2</div>
+<h1>任务来了，再启动它的 Agent<br>接入 ADX 后，谁找 Session，谁拉沙箱，谁执行</h1>
+<p>沿用真实订单故障案例和官方 Process SDK。把常驻 runner 改成由 Agent DX 按事件激活的执行服务；运维控制器保留事件、交付和验收职责。</p>
+<div class="pills"><span class="pill draft">设计草案 · 尚未实现 / 部署 / 验收</span><span class="pill">2026-10-30 · D2</span><span class="pill">单 Linux VM 起步</span><span class="pill">一事件一 Binding，多个真实 Session</span></div>
+<div class="header-actions"><a href="#deployment">看部署关系</a><a href="#identities">看 Session 与沙箱</a><a href="#flow">串一次案例</a><a href="#changes">看代码改哪里</a><button type="button" id="print">打印 / 保存 PDF</button><a href="../README.md">返回项目说明</a></div>
+</header>
+<div class="layout">
+<aside aria-label="设计目录"><strong>ONE DOCUMENT · 12 SECTIONS</strong><a href="#decision">01 设计结论与边界</a><a href="#deployment">02 组件部署关系</a><a href="#identities">03 事件、Session、沙箱</a><a href="#flow">04 一次故障的交互</a><a href="#integration">05 ADX 与九问怎么接</a><a href="#lifecycle">06 生命周期与失败处理</a><a href="#recordings">07 工作区和原生观测</a><a href="#contracts">08 最小接口与身份数据</a><a href="#changes">09 现有代码改动清单</a><a href="#ownership">10 团队职责</a><a href="#acceptance">11 实施顺序与验收</a><a href="#sources">12 官方依据与版本</a></aside>
+<main>
+<section id="decision"><span class="no">01 · DECISIONS</span><h2>先把这一版的选择说清楚</h2><p class="lead">运维控制器判断“是哪件事”，ADX 解决“在哪里运行”，Swarm / Core 执行“怎样处理”。</p>
+<div class="note warm"><strong>本页只有设计，没有切换现有系统。</strong><p>现有工作台、真实模型、PR/CI/发布链和历史数据继续按原实现运行。本页示例中的 case、Binding、Session 和接口回执均为设计示意，不是新验收证据。标记：<span class="fact">已有事实</span> <span class="proposal">本项目拟新增</span> <span class="pending">需环境验收</span>。</p></div>
+<div class="cards"><article class="card"><h4>① 一个事件一个承载身份</h4><p>同一事件的补充证据、修复和复核复用同一 Binding。不同事件按需创建独立沙箱，不预先启动一批运维 Agent。</p></article><article class="card"><h4>② 保留真实九问执行链</h4><p>沙箱里运行我们的薄执行服务，由它调用官方 Process SDK；SDK 启动 Swarm / Core 子进程。HTTP 封装不替代 Agent loop。</p></article><article class="card"><h4>③ 先做能解释、能回看的闭环</h4><p>首版事件未结束时不自动暂停。结案后确认回执和轨迹可读，再释放沙箱；自动休眠和进程 Checkpoint 另行验证。</p></article></div>
+<p><span class="fact">当前事实</span> 现有 runner 常驻轮询，但官方 SDK 的执行子进程本来就是按次创建。ADX 带来的变化是进一步让整个执行环境按需分配，并提供跨环境的稳定访问、资源与生命周期管理。见 <a href="#src-runner">R1</a>、<a href="#src-sdk">J1</a>。</p>
+<p><span class="proposal">接入选择</span> 优先使用 ADX 的 <strong>Agent Template + AgentBinding + 受管 HTTP 转发</strong>，不在 Ops Lab 再实现一套裸 Environment 的创建、缓存 IP 和路由管理。初版固定数字模板版本，暂不引入 Alias 灰度升级。</p>
+</section>
+
+<section id="deployment"><span class="no">02 · DEPLOYMENT</span><h2>仍是一台 VM，公共服务常驻，Agent 沙箱按需</h2><p class="lead">图中的框表示部署边界；Swarm、Core 是沙箱内官方子进程中的模块，不是额外的 HTTP 服务。</p>
+<figure class="diagram"><svg viewBox="0 0 1080 830" role="img" aria-labelledby="deployment-title deployment-desc"><title id="deployment-title">接入 ADX 后的单 VM 部署关系</title><desc id="deployment-desc">Mac 上的两个浏览器页面访问 Linux VM。公共运维服务与 ADX 服务常驻，ADX 按事件创建含执行服务、SDK 和 Swarm Core 的沙箱，工具在独立服务中。控制流用虚线，业务请求和记录读取用实线。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#547b8c"/></marker></defs>
+<rect x="2" y="2" width="1076" height="74" rx="12" fill="#e7eef6" stroke="#b6cad7"/><text x="24" y="29" font-size="17" fill="#234e65" font-weight="650">Mac · 浏览器与本地转发</text><text x="24" y="55" font-size="14" fill="#426474">运维工作台 :18780　｜　事件跟随栏 + 九问原版 WebUI :18781　｜　业务 API :18080</text>
+<path d="M260 76V127M790 76V127" stroke="#547b8c" stroke-width="2" marker-end="url(#arrow)" fill="none"/>
+<rect x="2" y="95" width="1076" height="730" rx="14" fill="#f8fbfc" stroke="#a5c0cd"/><text x="22" y="121" font-size="16" fill="#234e65" font-weight="650">专用 Linux VM · jiuwen-ops-lab（目标部署，本设计尚未部署）</text>
+<rect x="20" y="137" width="503" height="189" rx="10" fill="#edf3f7" stroke="#b4c9d6"/><text x="37" y="163" font-size="16" fill="#234e65" font-weight="650">常驻 · 运维产品与可信工具</text>
+<rect x="37" y="179" width="220" height="58" rx="7" fill="white" stroke="#91b2c5"/><text x="48" y="203" font-size="15" fill="#234e65">control + Web + 调度模块</text><text x="48" y="223" font-size="12" fill="#526f80">事件、执行记录、交付门控、验收</text>
+<rect x="271" y="179" width="235" height="58" rx="7" fill="white" stroke="#91b2c5"/><text x="282" y="203" font-size="15" fill="#234e65">evidence / delivery / probe</text><text x="282" y="223" font-size="12" fill="#526f80">日志取证、源码测试、PR、发布、业务验证</text>
+<text x="37" y="266" font-size="14" fill="#426474">监控：Prometheus / Alertmanager / Loki / collector</text><text x="37" y="291" font-size="14" fill="#426474">被维护业务：订单 API / PostgreSQL / 镜像仓库</text><text x="37" y="313" font-size="12" fill="#526f80">GitHub / Actions、真实模型 API 位于 VM 外</text>
+<rect x="548" y="137" width="512" height="189" rx="10" fill="#edf3f7" stroke="#b4c9d6"/><text x="565" y="163" font-size="16" fill="#234e65" font-weight="650">常驻 · ADX 控制与路由</text>
+<rect x="565" y="179" width="478" height="58" rx="7" fill="white" stroke="#91b2c5"/><text x="579" y="203" font-size="15" fill="#234e65">adx-apiserver + Ingress + 嵌入式 Activator</text><text x="579" y="223" font-size="12" fill="#526f80">统一入口、Binding 激活；模块可共进程，不是三个必需进程</text>
+<text x="565" y="266" font-size="14" fill="#426474">Redis：ADX 权威元数据　｜　Coordinator：调度</text><text x="565" y="291" font-size="14" fill="#426474">adxlet + Relay：节点执行 / 转发　｜　sandboxd：隔离载体</text><text x="565" y="313" font-size="12" fill="#526f80">standalone：3 个 ADX 进程 + Redis + 独立 sandboxd</text>
+<path d="M148 237V248H535V208H565" stroke="#547b8c" stroke-width="2" fill="none" marker-end="url(#arrow)"/><rect x="304" y="239" width="217" height="19" fill="#edf3f7"/><text x="312" y="252" font-size="11" fill="#426474">control → ADX：带 Binding 的受管 HTTP</text>
+<path d="M803 326V355H271V387" stroke="#547b8c" stroke-width="2" stroke-dasharray="7 5" fill="none" marker-end="url(#arrow)"/><text x="389" y="349" font-size="12" fill="#426474">控制：激活 / 调度 / 创建 / 就绪门控</text>
+<rect x="20" y="387" width="665" height="265" rx="12" fill="#e7f4ed" stroke="#75ac96" stroke-width="2"/><text x="39" y="414" font-size="17" fill="#1f6556" font-weight="650">按需 · case-123 的 Environment / 沙箱 A</text>
+<rect x="39" y="432" width="288" height="69" rx="7" fill="white" stroke="#7eac9a"/><text x="52" y="457" font-size="15" fill="#1f6556">Execd → 我们的执行服务</text><text x="52" y="480" font-size="12" fill="#526f80">接收 /runs，持久化接收，心跳与工具回调</text>
+<rect x="350" y="432" width="315" height="69" rx="7" fill="white" stroke="#7eac9a"/><text x="364" y="457" font-size="15" fill="#1f6556">官方 Process SDK Client.run()</text><text x="364" y="480" font-size="12" fill="#526f80">本地 stdin/stdout JSONL · 不跨沙箱传管道</text><path d="M327 466H350" stroke="#547b8c" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="350" y="523" width="315" height="70" rx="7" fill="#d1e9dc" stroke="#7eac9a"/><text x="364" y="548" font-size="15" fill="#1f6556">官方 CLI / Swarm Runtime / Core</text><text x="364" y="572" font-size="12" fill="#426474">真实模型循环与工具调用 · repair / verify 分 Session</text><path d="M507 501V523" stroke="#547b8c" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="39" y="535" font-size="13" fill="#426474">仅持有当前执行的受限凭据</text><text x="39" y="560" font-size="13" fill="#426474">不持有 Docker socket / GitHub Key</text><text x="39" y="585" font-size="13" fill="#426474">工程工具仍在 delivery，未自动迁入沙箱</text><text x="39" y="627" font-size="13" fill="#426474">/data → 本事件持久目录；记录不随沙箱删除</text>
+<rect x="710" y="387" width="350" height="105" rx="10" fill="#fff" stroke="#9dbaa9" stroke-dasharray="7 5"/><text x="730" y="418" font-size="16" fill="#426474">按需 · case-456 的沙箱 B</text><text x="730" y="446" font-size="13" fill="#526f80">不同事件独立身份、目录和配额</text><text x="730" y="471" font-size="13" fill="#526f80">并发数由实测资源决定，不预先创建</text>
+<rect x="710" y="512" width="350" height="140" rx="10" fill="#fff5e4" stroke="#cfb27d"/><text x="730" y="540" font-size="16" fill="#876020">常驻 · 原生观测服务</text><text x="730" y="568" font-size="13" fill="#6f6650">原版前端 + 自有事件跟随栏</text><text x="730" y="593" font-size="13" fill="#6f6650">按真实 Session 定位只读记录根目录</text><text x="730" y="620" font-size="13" fill="#6f6650">读取不启动 Agent、不唤醒已释放沙箱</text>
+<path d="M804 237H1067V362H690V466H665" stroke="#547b8c" stroke-width="2" fill="none" marker-end="url(#arrow)"/><text x="810" y="356" font-size="12" fill="#426474">数据：Ingress → Relay → 业务端口</text>
+<rect x="20" y="696" width="1040" height="104" rx="10" fill="#e9eff3" stroke="#a7c0cd"/><text x="39" y="725" font-size="16" fill="#234e65" font-weight="650">VM 持久存储 · 三套职责分开</text><text x="39" y="753" font-size="13" fill="#426474">control SQLite：case / attempt / 身份映射　｜　ADX Redis：Binding / Environment 元数据　｜　事件目录：SDK 状态、原始轨迹与回执</text><text x="39" y="779" font-size="13" fill="#426474">首版本地目录挂载；多节点需共享存储和写者隔离，AFS 为后续选项，不等于已接通恢复。</text>
+<path d="M270 652V696M886 696V652" stroke="#547b8c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+</svg><figcaption>常驻的是平台与公共工具，按需的是事件执行环境。ADX 环境控制流与请求转发流不同；运维控制器不直接操作 sandboxd。图中实际监听端口、网桥和证书在实施时由部署配置确定。</figcaption></figure>
+<div class="table"><table><thead><tr><th>部署组</th><th>进程 / 容器关系</th><th>生命周期与角色</th></tr></thead><tbody>
+<tr><td>现有运维公共服务</td><td>control、evidence、delivery、probe 与观测栈保持独立服务；调度模块先放 control 内。</td><td>常驻，保留真实 PR/CI/构建/发布、业务验证和数据库。</td></tr>
+<tr><td>ADX 单机底座</td><td>Redis、Coordinator、adxlet（内嵌 Relay）、adx-apiserver（内嵌 Ingress，启用嵌入式 Activator）、独立 sandboxd。</td><td>常驻；不部署每个事件的空 Agent。嵌入式 Activator 仍有独立职责，后续可拆进程。</td></tr>
+<tr><td>事件执行沙箱</td><td>每个活动事件一个 Environment；Execd 启动镜像中的运维执行服务；SDK 按执行启动官方子进程。</td><td>第一次需要 Agent 时创建。镜像构建、模板发布均不等于沙箱已启动。</td></tr>
+<tr><td>原生观测</td><td>一个原版前端；传输适配器按 recording root 选择隔离的只读读取上下文，必要时以 helper 进程隔离全局路径。</td><td>常驻入口；只读 helper 是观测进程，不是运维 Agent。历史可在执行资源释放后继续读取。</td></tr>
+</tbody></table></div>
+<div class="note warm"><strong>部署前置条件待核实，不把容器名字当能力证明。</strong><p>沿用现有 Linux VM、Docker Compose 应用栈；新增 ADX 安装目录、Redis namespace、sandboxd 网络和证书，不重建 VM。已有 VM 为 4 vCPU / 10 GiB，新增底座后的资源余量必须先测量。首选 runc 后端；包的 ARM64 支持、sandboxd / Execd 版本、路由到 Compose 工具服务和真实模型服务均需验证。不以 Mac 宿主、Docker ready 或 TCP 端口可连接替代 Agent 就绪。</p></div>
+</section>
+
+<section id="identities"><span class="no">03 · IDENTITY</span><h2>一个“Session”不能同时代表工单、对话和容器</h2><p class="lead">本方案不另造一个叫 session_id 的业务字段：用 case_id 表示运维事件，用 sdk_session_id 表示九问真实会话。</p>
+<figure class="diagram"><svg viewBox="0 0 1050 375" role="img" aria-labelledby="identity-title"><title id="identity-title">一个事件对应一个活动 Binding 和 Environment，但含两个真实 SDK Session</title><defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#52788a"/></marker></defs>
+<rect x="10" y="65" width="235" height="105" rx="9" fill="#e7eff7" stroke="#94b4ca"/><text x="28" y="94" font-size="16" fill="#254e66">运维事件 case-123</text><text x="28" y="122" font-size="13" fill="#527080">同一次订单故障的业务归属</text><text x="28" y="148" font-size="13" fill="#527080">补充日志 / 修复 / CI / 复核</text>
+<rect x="281" y="65" width="268" height="105" rx="9" fill="#e9f4ee" stroke="#85ae97"/><text x="299" y="94" font-size="16" fill="#28634d">Binding ops-case-123-e1</text><text x="299" y="122" font-size="13" fill="#527080">活动期间稳定；固定模板数字版本</text><text x="299" y="148" font-size="13" fill="#527080">current → Environment E1</text>
+<rect x="586" y="15" width="453" height="220" rx="10" fill="#f1f8f3" stroke="#85ae97"/><text x="603" y="44" font-size="16" fill="#28634d">Environment E1 · 当前 Runtime / 沙箱 A</text>
+<rect x="604" y="67" width="416" height="58" rx="6" fill="white" stroke="#a2bdb0"/><text x="620" y="91" font-size="14" fill="#254e66">repair · attempt-r1 → 真实 Session S-repair</text><text x="620" y="113" font-size="12" fill="#527080">取证与写入工具；真实 ID 由 SDK 事件登记</text>
+<rect x="604" y="145" width="416" height="58" rx="6" fill="white" stroke="#a2bdb0"/><text x="620" y="169" font-size="14" fill="#254e66">verify · attempt-v1 → 真实 Session S-verify</text><text x="620" y="191" font-size="12" fill="#527080">只读工具；读取独立业务验证报告</text>
+<path d="M245 115H281M549 115H586" stroke="#52788a" stroke-width="2" fill="none" marker-end="url(#arrow2)"/>
+<rect x="10" y="267" width="1029" height="93" rx="9" fill="#edf1f5" stroke="#afc4d0"/><text x="28" y="296" font-size="15" fill="#254e66">沙箱外保存：case → Binding 历史 → Environment 身份 / attempt → SDK Session / 记录目录</text><text x="28" y="324" font-size="13" fill="#527080">事件结案释放后，S-repair 与 S-verify 的记录仍在；重新打开事件会显式创建 e2 承载轮次，历史 e1 不改写。</text><text x="28" y="346" font-size="12" fill="#527080">图中 S-repair、E1 等均是解释用符号，不是验收得到的 SessionID 或 EnvironmentID。</text>
+<path d="M124 170V267M415 170V267M811 235V267" stroke="#52788a" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+</svg></figure>
+<div class="table"><table><thead><tr><th>身份</th><th>谁创建 / 保存</th><th>复用与变化规则</th></tr></thead><tbody>
+<tr><td>case_id</td><td>运维控制器；现有事件对象。</td><td>同一故障的告警归并到同一 case。当前按故障 release 去重的规则可先保留，扩展时增加租户 / 服务 / 环境范围。</td></tr>
+<tr><td>binding_id + template version</td><td>控制器选稳定地址；ADX 管理 Binding。完整作用域还包含认证租户及模板。</td><td>事件活动期间复用；不将 SDK SessionID 当 BindingID，也不每次调用 template URN 生成随机新 Binding。</td></tr>
+<tr><td>environment_id / Runtime</td><td>ADX 当前 Binding 引用 Environment；Platform 管运行身份与生命周期。</td><td>首版固定模板，复用 current Environment。Runtime 可因恢复 / 重启变化；不是 Swarm Session。不能从 BindingID 猜真实 EnvID。</td></tr>
+<tr><td>attempt_id / execution_id</td><td>控制器原子预留一次业务执行；execution_id 直接使用 attempt_id。</td><td>网络重发不增加 attempt；明确业务重试才创建新 attempt。接收回执、模型执行状态和结果提交分别记录。</td></tr>
+<tr><td>sdk_session_id</td><td>从官方 run 事件与回执登记；保留 request_id。</td><td>repair 与 verify 默认不同真实 Session；一个 attempt 内不换 Session。补充同一对话必须显式指定已有 ID，并保留它的持久状态。</td></tr>
+<tr><td>recording_root</td><td>控制器分配受限事件目录并登记 Session 索引。</td><td>首版每个事件一个独立数据根；后继运行承载复用前须确认旧写者退出。模型和客户端不能提交任意主机路径。</td></tr>
+</tbody></table></div>
+<div class="note"><strong>“找不到 Session”要分两种。</strong><p>没有业务事件：先归并或创建 case；没有 SDK Session：让官方执行创建并回报。只有不存在合适的执行承载时才需要激活 Environment。存在 Session 历史并不代表沙箱还活着；沙箱活着也不代表已经有这次执行的 Session。</p></div>
+</section>
+
+<section id="flow"><span class="no">04 · END-TO-END FLOW</span><h2>从第一次订单 500，到释放执行资源</h2><p class="lead">点击阶段查看“谁对谁做了什么”。下面是设计讲解器，不会调用模型、启动沙箱或操作真实案例。</p>
+<div class="steps" role="group" aria-label="选择设计流程阶段"><button type="button" data-step="0" aria-pressed="true">1 归并告警</button><button type="button" data-step="1" aria-pressed="false">2 选择承载</button><button type="button" data-step="2" aria-pressed="false">3 按需创建</button><button type="button" data-step="3" aria-pressed="false">4 SDK 执行</button><button type="button" data-step="4" aria-pressed="false">5 CI 与发布</button><button type="button" data-step="5" aria-pressed="false">6 独立验证与复核</button><button type="button" data-step="6" aria-pressed="false">7 归档并释放</button><button type="button" data-step="7" aria-pressed="false">8 后续请求</button></div>
+<div class="stage" id="stage" aria-live="polite"><h3>1．实际 500 告警先归到一个事件</h3><p>控制器识别服务、环境与故障 release；重复告警追加到已有事件，不重复申请 Agent。</p><dl><dt>交互</dt><dd>订单请求 → 监控 → control.create_case()</dd><dt>保留证据</dt><dd>真实告警、业务检测、故障 release / source；此时还没有 SDK Session。</dd><dt>页面解释</dt><dd>业务异常；事件等待分配执行资源。不是“Agent 已开始调查”。</dd></dl></div>
+<div class="table"><table><thead><tr><th>阶段</th><th>交互顺序</th><th>控制器必须知道的结果</th></tr></thead><tbody>
+<tr><td>1 告警</td><td>Alertmanager → control：归并 / 新建 case。</td><td>是否新事件；故障属于哪个真实 release。</td></tr>
+<tr><td>2 预留执行</td><td>control 的调度模块：按 case 原子登记 Binding 选择与 attempt，写入待投递执行。</td><td>资源尚未就绪不进入 REPAIRING；同 case 仅一个活动执行。</td></tr>
+<tr><td>3 激活</td><td>control → ADX Gateway；Activator 读取模板 / Binding，首次访问创建稳定身份；Platform → adxlet → sandboxd → Execd 启动镜像服务；Gateway 等可用路由后转发。</td><td>真实 Binding / Environment 身份、启动失败或结果未知；业务服务 /ready 完成 SDK 能力检查。</td></tr>
+<tr><td>4 修复</td><td>执行服务持久化接受 attempt → 官方 SDK → Swarm / Core → 模型；host tool 回调 → evidence / delivery；事件与真实 SessionID 回报 control。</td><td>SDK 实际开始后才标记 REPAIRING；工具证据、候选 SHA、PR 与官方回执互相对应。</td></tr>
+<tr><td>5 交付</td><td>control / delivery ↔ GitHub CI → 门控合并 → 精确源码构建 → digest 发布。</td><td>修复 SDK 已结束，页面显示等待 CI / 构建 / 发布；不新增假的 Core Span。</td></tr>
+<tr><td>6 恢复复核</td><td>probe 对真实 HTTP / 金额 / 数据库独立验证；control 经相同 Binding 再送 verify attempt；SDK 新建真实只读 Session。</td><td>同事件 / 同活动承载 / 新 Session。真实恢复验证通过与 SDK 复核通过共同决定 RESOLVED_FIXED。</td></tr>
+<tr><td>7 结案清理</td><td>控制器确认结果和记录已落盘、SDK 子进程结束、Observer 可读取 → 写入清理意图 → 经 ADX 删除该活动 Binding。</td><td>删除确认后标记执行资源已释放。业务 case / Session 索引 / 目录和原始证据继续保留；删除未知不能宣布释放。</td></tr>
+<tr><td>8 后续输入</td><td>活动 case 补充请求继续走原 Binding；结案 case 的显式重开创建新承载轮次 e2。</td><td>重开不篡改 e1 身份；是否继续已有 SDK 对话由业务显式选择。旧执行退出未确认前，禁止新旧写者共用数据根。</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="integration"><span class="no">05 · INTEGRATION</span><h2>ADX 接 HTTP；Process SDK 仍在沙箱本地接官方进程</h2><p class="lead">控制器不需要成为 Process SDK 客户端，也不把 SDK 的 stdin/stdout 直接暴露成公网协议。</p>
+<div class="cards"><article class="card"><h4><span class="fact">ADX 已有</span></h4><p>不可变 Template、受管 Binding 激活、HTTP/SSE / WS 透明转发、Environment 调度与生命周期、参数化目录挂载；公开目录 / 管理查询不等于业务健康。</p></article><article class="card"><h4><span class="fact">九问已有</span></h4><p>Client.run() 创建官方命令进程、JSONL 双向协议、host tool 回调、取消、结构化结果；传 session_id 可请求复用已有会话的持久状态。</p></article><article class="card"><h4><span class="proposal">Ops Lab 新增</span></h4><p>按事件调度、沙箱执行 HTTP API、一次执行的持久接收 / 去重 / 回查、受限授权、跨沙箱 Session / 记录索引。ADX 不替我们理解故障或保证 PR 只创建一次。</p></article></div>
+<h3>模板发布与第一次请求</h3><p>先构建包含当前官方依赖锁和执行服务的镜像，再发布 ADX 模板。发布请求不填 version，使用服务端返回的数字版本；将镜像 digest、模板版本和九问锁定提交登记到 Ops Lab 配置。模板声明 HTTP 8080、资源、目录挂载与就绪检查；镜像自己的 ENTRYPOINT/CMD 启动执行服务，Execd 由 ADX 平台注入。</p>
+<pre><code>运维控制器发出（设计示例）
+POST https://ADX_GATEWAY/agent/http/runs
+  ?target=urn:adx:binding:ops-order:1:ops-case-123-e1
+
+{ "case_id": "case-123", "attempt_id": "attempt-r1", "phase": "repair" }
+
+ADX 负责：选 Binding → 按需激活 → 路由转发
+我们负责：/runs 的业务语义、执行授权、接收落盘、SDK 调用和回执
+
+沙箱内：执行服务 → Client.run(...) → 官方 CLI → Swarm Runtime → Core
+工具链：SDK on_tool_call → 受限工具入口 → evidence / delivery</code></pre>
+<div class="note"><strong>这是两层不同的接口。</strong><p><code>/agent/http</code> 和 Binding URN 是 ADX 官方入口；<code>/runs</code>、<code>/ready</code>、状态回查和取消是本项目拟新增的执行服务接口。ADX 移除平台凭据后转发业务请求，业务执行授权需要另外设计，不能依赖原始 ADX API Key 被透传到沙箱。</p></div>
+<h3>模型与工具凭据的传递</h3><p>ADX 租户 Key 只留在控制器 / 调度侧；GitHub Key、Docker socket 和平台管理凭据留在可信服务。沙箱使用短期、绑定 case / attempt / phase 的执行凭据，工具代理在服务端重新绑定 case 并核验允许操作，再以原有服务身份调用 evidence / delivery；verify 的只读限制要在代理侧执行，不只写在 Prompt 里。</p>
+<p>模型调用仍是真的。单机初版可由部署侧将受保护的模型配置文件只读挂载进执行环境；执行服务启动时加载，不写入镜像、Template、公开回执或普通 <code>X-ADX-Parameters</code>。这是本项目需要实现的配置加载与权限准备，不是 ADX 已有专用 Secret 服务。后续再替换为短期模型代理凭据。</p>
+</section>
+
+<section id="lifecycle"><span class="no">06 · LIFECYCLE</span><h2>按需创建先落地，自动休眠另设门槛</h2><p class="lead">第一次收到事件时创建，事件结束后释放，已经能避免大量空 Agent 常驻。首版不把运行到一半的模型任务当成可随时安全暂停。</p>
+<div class="table"><table><thead><tr><th>情况</th><th>本方案处理方式</th><th>边界</th></tr></thead><tbody>
+<tr><td>首次启动 / 资源不足</td><td>显式记录等待资源、启动中与未就绪；在原 deadline 内查询同一 Binding，不换 ID 规避失败。</td><td>ADX 控制创建和调度；控制器解释业务进度。TCP 可连接仍需业务 /ready 检查 SDK 能力。</td></tr>
+<tr><td>HTTP 返回丢失</td><td>同一 attempt 原身份回查；只有确认未接受才可再次投递。沙箱 /runs 用 execution_id 去重。</td><td>ADX 环境创建幂等不等于模型执行、工具副作用、PR 创建幂等；写入结果未知不盲目重放。</td></tr>
+<tr><td>执行服务 / SDK 崩溃</td><td>现有 lease 失效后进入需核查状态；先查回执、PR、运行版本和任务日志，显式决定新 attempt。</td><td>保留现有“不自动重放有副作用任务”的原则。平台恢复进程不等于业务从最后一个工具调用精确继续。</td></tr>
+<tr><td>CI / 构建等待</td><td>首版保留同事件沙箱，不运行模型；等待结束后送入新的 verify attempt。</td><td>这是事件处理期间有界保留资源，不是为所有潜在事件预建 Agent。并发额度和最长等待需要可配置。</td></tr>
+<tr><td>自动暂停（后续）</td><td>ADX 已有 idle_action=pause 和访问触发 EnsureRunning；选定后端并实测 Checkpoint、活动检测和模型连接后再开启。</td><td>后台任务不必然阻止 idle；202 后的后台 SDK 可能被错误视为空闲。初版模板 idle timeout 为 0，禁止靠网页长连接冒充执行保活。</td></tr>
+<tr><td>取消 / 终止</td><td>控制器撤销本 attempt 的工具权限，通知 SDK cancel，等待子进程结束与回执刷新，再申请 ADX 清理。</td><td>浏览器断开或关闭 SSE 不代表任务取消。已有 PR、已提交发布不因取消而消失。</td></tr>
+<tr><td>结案释放</td><td>保存清理意图、核对 Observer 已可读、确认停止写入，再删除活动 Binding；后台对账只重试清理，不重试修复。</td><td>保留 case 的历史 Binding/Env 快照和全部记录。ADX Binding 删除与业务 case 删除是不同动作。</td></tr>
+</tbody></table></div>
+<p><strong>并发分两层：</strong>同 case 只能有一个活动 SDK 执行；不同 case 可有独立承载，但必须受 VM 配额限制。针对同一服务 / 环境的合并与发布仍串行、核验 expected release，不能因沙箱独立就允许两个修复互相覆盖。初始并发额度可设为 1，环境资格通过后再增加；设计验收用两个只读取证事件验证独立承载，不同时破坏同一个订单应用。</p>
+</section>
+
+<section id="recordings"><span class="no">07 · DATA &amp; OBSERVATION</span><h2>沙箱可以消失，事件和原生轨迹不能消失</h2><p class="lead">现在的单 runner 共享卷要改成多事件记录目录和可信索引，原版 WebUI 继续显示真实 Session 的原始轨迹。</p>
+<pre><code>宿主机持久目录（示意，路径由控制器生成）
+/var/lib/ops-lab/cases/&lt;case_id&gt;/
+  swarm/                  # 官方 Session 状态与 .trace 数据；由对应沙箱单写
+  reports/&lt;attempt_id&gt;/   # 官方结果回执、投递日志；不保存敏感请求头
+
+沙箱：/data → 仅本 case 的目录，可写
+Observer：/recordings → 经授权的事件目录，只读
+control：case / Binding历史 / attempt / Session / recording_root 索引
+delivery：仍有自己的源码工作区，和上述 SDK 状态不是同一目录</code></pre>
+<div class="table"><table><thead><tr><th>数据</th><th>持有与访问规则</th><th>不能推导出的结论</th></tr></thead><tbody>
+<tr><td>业务事件和发布事实</td><td>control / delivery 原有持久卷保留；ADX Redis 单独保存平台状态。</td><td>ADX Redis 正常不代表业务恢复；Agent 完成不代表发布通过。</td></tr>
+<tr><td>SDK 状态与原生 Trace</td><td>同 case 独立根目录；Observer 读取官方 Session 元数据和官方 Trace 存储。保留 SQLite WAL 所需文件访问条件，禁止直接复制正在写入的单个 DB 文件当完整归档。</td><td>文件存在不代表任意中断都能继续执行。轨迹需要实际可读水位 / 终态归档验证。</td></tr>
+<tr><td>多根目录读取</td><td>Session 索引定位 recording_root；读取上下文隔离。若官方查询依赖全局数据目录，就为每个活动根使用受限只读 helper 进程。</td><td>不能为每个请求改全局环境变量或切换共用软链，否则并发读取会串 Session。helper 细节需实现阶段验证。</td></tr>
+<tr><td>原生前端</td><td>继续使用锁定版本原版 UI；自有事件跟随栏显示 case / Binding / Environment / attempt / 真实 Session。</td><td>不把两个 SDK Session 合成一个，不把创建沙箱、CI、发布事件插入 Core Span。</td></tr>
+<tr><td>AFS / 多节点</td><td>后续可把同一目录契约接到 AFS 或其他共享存储；验证 POSIX / SQLite WAL、写者排他、跨节点访问和故障恢复。</td><td>ADX 支持挂载不等于已集成 AFS；本地目录的验证不能代替跨节点恢复验收。</td></tr>
+</tbody></table></div>
+<p><strong>读取历史不应唤醒 Agent。</strong>观测服务通过记录索引读持久文件，不经受管 Harness 业务入口。结案清理前必须确认真实 SDK 回执已落盘、轨迹水位可读和进程已退出；保留期由实验配置控制，不继承现有 7 天参数就宣称永久留存。</p>
+</section>
+
+<section id="contracts"><span class="no">08 · PROPOSED CONTRACTS</span><h2>最小接口只包执行，不再包一层模型循环</h2><p class="lead">以下均为拟新增产品合同。已有 SDK / ADX 接口与我们自己的 HTTP API 分别标注。</p>
+<div class="table"><table><thead><tr><th>接口 / 数据</th><th>责任与语义</th><th>成功表示什么</th></tr></thead><tbody>
+<tr><td>ADX /agent/http + Binding URN<br><span class="fact">官方已有</span></td><td>验证平台身份，选 Binding，按需激活并透明转发；固定实际版本与镜像来源。</td><td>选到身份或返回 ID 不表示模型已执行；需分别检查服务和任务状态。</td></tr>
+<tr><td>GET /ready<br><span class="proposal">执行服务新增</span></td><td>不调用模型；验证配置加载、SDK capabilities、持久目录可用。部署探针与控制器共同使用。</td><td>执行宿主可接受任务；不代表订单业务正常。</td></tr>
+<tr><td>POST /runs<br><span class="proposal">执行服务新增</span></td><td>校验受限授权和 phase；以 attempt_id 持久保存接收状态与规范化请求摘要，同 ID 相同请求返回既有状态，不同请求拒绝。</td><td>202 只表示已可靠接受；收到官方 SDK 的实际开始事件后才记录执行开始，不预设或伪造模型调用。</td></tr>
+<tr><td>GET /runs/{attempt_id}<br><span class="proposal">执行服务新增</span></td><td>回查 accepted / running / completed / failed / outcome_unknown，返回真实 Session 与官方回执摘要。</td><td>断连时对账使用；客户端不得据超时新建另一个 attempt。</td></tr>
+<tr><td>POST /runs/{attempt_id}/cancel<br><span class="proposal">执行服务新增</span></td><td>持久化取消意图，传给 SDK cancel；不能仅终止 HTTP 连接。</td><td>收到取消不表示子进程退出；退出确认和清理另有状态。</td></tr>
+<tr><td>受限执行 / 工具入口<br><span class="proposal">control 内的 broker 模块</span></td><td>接收沙箱事件、心跳、结果、工具请求；校验凭据的 case / attempt / phase / 到期时间；服务端重新绑定 case 并裁剪权限。</td><td>不是把当前全局 runner_token 发给每个沙箱。原 delivery 门控和独立业务验证继续保留。</td></tr>
+</tbody></table></div>
+<details><summary>查看身份映射与任务记录示例（设计字段，不是运行回执）</summary><pre><code>{
+  "case_id": "case-123",
+  "execution_binding": {
+    "incarnation": 1,
+    "template": "ops-order",
+    "template_version": "1",
+    "binding_id": "ops-case-123-e1",
+    "environment_id": "&lt;由 ADX 真实返回&gt;",
+    "allocation_state": "READY",
+    "recording_root_id": "&lt;控制器分配的目录标识&gt;"
+  },
+  "executions": [{
+    "attempt_id": "attempt-r1",
+    "phase": "repair",
+    "delivery_state": "ACCEPTED",
+    "sdk_state": "RUNNING",
+    "sdk_session_id": "&lt;官方事件回报后填写&gt;",
+    "sdk_request_id": "&lt;官方请求身份&gt;"
+  }],
+  "cleanup": { "state": "NOT_REQUESTED" }
+}</code></pre></details>
+<p>业务状态仍由真实 HTTP / 金额 / 数据库决定。执行承载状态、任务投递状态、SDK 执行状态分别持久化，映射到现有工作台的人类语言；不能把 CREATING 或 202 当成“Agent 正在调查”，也不能把 Environment Running 当成“业务正常”。</p>
+</section>
+
+<section id="changes"><span class="no">09 · CODE DELTA</span><h2>现有代码改哪里，哪些能力继续复用</h2><p class="lead">以 Ops Lab 提交 <code>5e0b01389a32480c0a20831aca595631c10f9f4a</code> 为现状基线。下面的新增文件名是拟定方案，当前尚不存在。</p>
+<div class="table"><table><thead><tr><th>现有位置</th><th>目前行为</th><th>拟改动与边界</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/lab/control.py#L26">lab/control.py<br>create_case / scheduler / claim</a></td><td>按 release 归并事件；常驻 runner 轮询 /internal/claim；claim 阻止全局第二个 Agent 执行。</td><td>增加按 case 的分配记录与持久投递；以同 case 原子预留代替全局单任务占用；资源额度、同服务交付锁分开。无资源 / 启动中不抢先置为 REPAIRING。</td></tr>
+<tr><td><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/lab/control.py#L191">control 心跳 / event / result / retry</a></td><td>已有 attempt 校验、Session 登记、迟到回执保护和真实交付门控。</td><td>保留这些语义；新增投递对账、清理对账、Binding / Env / recording root 关联，以及受限执行凭据。SQLite 单控制器可先保留，跨副本调度不在首版范围。</td></tr>
+<tr><td><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/lab/runner.py#L27">lab/runner.py<br>execute / on_tool / heartbeat / loop</a></td><td>execute 已调用真实 SDK、工具回调与结果重试；loop 常驻领取任何事件。</td><td>保留 execute 核心接线，抽出可按指定 attempt 执行的函数；新增沙箱 HTTP 接收与持久去重；移除受管模式的全局轮询。SDK 进程、事件和 host tool 回调仍全部真实。</td></tr>
+<tr><td><code>lab/adx_dispatch.py</code><br><span class="proposal">拟新增模块</span></td><td>目前没有 ADX 客户端。</td><td>封装固定版本 Binding 目标、受管请求、同身份回查和清理；平台凭据留在 control。不得直接操作 Docker / sandboxd，也不缓存沙箱 IP 作为权威身份。</td></tr>
+<tr><td><code>lab/execution_broker.py</code><br><span class="proposal">拟新增模块</span></td><td>目前 runner 以全局 worker 凭据直接访问 control、工具服务。</td><td>先作为 control 内模块提供按执行授权与工具转发，不新增必需部署进程；保留 evidence / delivery 的服务间认证与安全门控。</td></tr>
+<tr><td><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/deploy/Runner.Dockerfile">deploy/Runner.Dockerfile</a><br>framework.lock.json</td><td>安装固定 Swarm / Core / SDK，启动 lab.runner:app。</td><td>构建受管执行镜像，启动新执行入口；沿用依赖锁，发布镜像 digest 和数字模板版本。平台注入 Execd，不在业务镜像里伪装平台 daemon。</td></tr>
+<tr><td><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/compose.yaml#L183">compose.yaml</a><br><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/scripts/lab">scripts/lab / VM 配置脚本</a></td><td>Compose 常驻 runner，native-web 只读挂 runner 卷；配置 / qualify 针对固定 runner。</td><td>增加显式 ADX 模式的安装 / 检查 / 模板发布脚本和网络配置；切换后不再常驻 runner；qualify 经真实 Binding 执行。ADX 系统组件由 ADX 部署工具管理，不随意塞入业务 Compose 假装集群。</td></tr>
+<tr><td><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/lab/native_observer.py#L25">lab/native_observer.py</a><br><code>lab/recording_index.py</code>（拟新增）</td><td>单一 RECORDINGS 根、一个 TrajectoryHost 与固定 sessions 软链。</td><td>改为可信 Session→记录根索引、隔离读取上下文和归档可读检查；原版 UI / 协议能力继续复用。只读挂载，不能从沙箱提供的任意路径读主机文件。</td></tr>
+<tr><td><a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/web/observe.html">web/observe.html</a><br>web/workbench.js / lab/experience.py</td><td>已有事件跟随、跨真实 Session 切换和业务三段证据。</td><td>补充等待资源 / 沙箱启动 / SDK 开始 / 清理状态，以及真实 Binding / Env 对应。保留默认 JSON 折叠、快速基线各 2 次和真实业务健康来源。</td></tr>
+<tr><td>lab/delivery.py / evidence.py / probe.py<br>订单 API / GitHub workflows</td><td>已有取证、改码测试、真实 PR/CI、digest 发布和恢复合同。</td><td>原则上继续复用；仅调整受限入口、必要的服务地址与身份联接。同被维护对象交付必须串行核验 release。此设计不把这些功能搬进 Agent loop。</td></tr>
+<tr><td>tests/product / scripts/qualify_jiuwen.py<br>验收脚本与说明</td><td>现有边界测试及真实案例证据。</td><td>新增按需启动、重复投递、跨事件隔离、清理后原生可读等测试。旧案例证据仍保留，只证明旧链路，不自动继承为 ADX 已验收。</td></tr>
+</tbody></table></div>
+<div class="note"><strong>预计不需要修改 ADX 或 Swarm/Core 源码。</strong><p>先使用固定版本的公共 ADX 能力和官方 SDK。若实际发现缺少接口或原生记录读取受限，单独记录缺口与最小扩展，再评审；不把尚未验证的能力写成默认依赖。</p></div>
+</section>
+
+<section id="ownership"><span class="no">10 · OWNERSHIP</span><h2>运维团队与底座团队怎么分工</h2><div class="table"><table><thead><tr><th>责任方</th><th>交付责任</th><th>双方要对齐的合同</th></tr></thead><tbody>
+<tr><td>运维 Agent 产品</td><td>告警归并、case 和 attempt、权限策略、Prompt / 工具、业务工作流、PR/CI/发布、业务恢复验证、操作和事件观测。</td><td>提交什么执行请求、如何去重、多久等待、取消含义、凭据最小范围、怎样判断真正修复。</td></tr>
+<tr><td>Swarm / Core</td><td>真实模型与工具循环、SDK 会话行为、结构化结果、取消、官方 Session 和原生轨迹格式。</td><td>SDK 能力与版本锁、session_id 复用边界、状态落盘 / 轨迹刷新与读取、工具回调和错误语义。</td></tr>
+<tr><td>ADX</td><td>模板 / Binding 激活、Environment 放置与隔离、资源与生命周期、版本化路由、受管 HTTP 转发、目录挂载。</td><td>首次创建与结果未知、业务就绪、启动时限、idle 活动检测、删除确认、存储和网络支持矩阵。</td></tr>
+<tr><td>Ops Lab 接入适配</td><td>部署包和模板、control 内调度 / broker、沙箱薄执行服务、身份映射、只读轨迹索引。</td><td>是产品与底座之间必要的工程接线，不是新的大模型 Agent 框架；首版归属本仓库。</td></tr>
+</tbody></table></div></section>
+
+<section id="acceptance"><span class="no">11 · IMPLEMENTATION GATES</span><h2>实施时分段验收，先证明承载，再接完整修复</h2><p class="lead">本页没有执行以下阶段。每阶段留下独立证据，不能用组件能力或已有 Docker 案例代替 ADX 产品 E2E。</p>
+<div class="table"><table><thead><tr><th>阶段</th><th>实际要验证的行为</th><th>退出证据</th></tr></thead><tbody>
+<tr><td>A 环境资格</td><td>不打断现有任务，安装固定版本 ADX / sandboxd；验证 ARM64、runc、磁盘 / 内存、内部工具路由、模型出口、受保护配置与挂载。</td><td>版本 / 配置清单、真实 Environment、业务 /ready 与 SDK capabilities；资源测量。无模型替身。</td></tr>
+<tr><td>B 最小真实执行</td><td>没有 Agent 沙箱 → 一个只读取证事件 → 一次受管请求按需启动 → 真实 SDK / 模型 / 工具 → 回执、Session 与原生轨迹可对应。</td><td>case / Binding / Environment / attempt / SDK Session 身份链；真实工具证据；未预创建实例的目录查询记录。</td></tr>
+<tr><td>C 身份与故障边界</td><td>同事件重复请求不产生第二次执行；两个不同只读事件分别承载；模拟 HTTP 回执丢失后回查同 attempt；取消后不接受越权工具调用。</td><td>环境与 SDK 执行计数、去重记录、受限授权拒绝、迟到回执和 outcome_unknown 的处理。</td></tr>
+<tr><td>D 完整订单案例</td><td>快速正常基线 → 实际 500 → ADX 沙箱修复 → 真实 PR/CI/构建/digest 发布 → 原独立恢复合同 → 同 Binding 的新 verify Session → RESOLVED_FIXED。</td><td>真实业务三段证据、PR/CI与发布身份、repair / verify 原生轨迹；打开一次观测页连续跟随，不伪造 Core Span。</td></tr>
+<tr><td>E 释放后可回看</td><td>终态回执 / 轨迹刷新完毕后删除活动 Binding；原生页仍可读两个 Session；重开事件采用新承载轮次并保持旧记录。</td><td>ADX 删除确认、持久目录与只读回看、无旧写者并存，case 与历史身份未丢失。</td></tr>
+<tr><td>后续独立阶段</td><td>自动暂停 / Checkpoint 恢复、AFS / 多节点、增加并发额度与别名升级。</td><td>分别建立后端、存储与业务执行的真实验收，不混入单机首版通过结论。</td></tr>
+</tbody></table></div>
+<p><strong>实施切换原则：</strong>先在同 VM 的独立目录和端口准备底座，现有 runner 保持原样；最小链路通过后，空闲时显式切换执行后端，不能让旧 runner 和 ADX 调度同时领取同一队列。回退只对未接受的新任务切换；在途任务先对账。所有历史卷、凭据和真实 PR 保留。</p>
+<div class="note warm"><strong>实施前仍需验证的设计假设</strong><p>① 当前 VM 能否承载新增底座；② ADX 与 Compose 的实际连通和安全授权；③ 官方多根记录读取与终态刷新条件；④受限凭据与模型配置在选定后端的传递；⑤受管镜像的业务就绪。以上不阻止先评审架构，但不是已完成事项。</p></div>
+</section>
+
+<section id="sources"><span class="no">12 · EVIDENCE &amp; VERSION</span><h2>按固定提交复核，不混用旧版 Python ADX</h2><p class="lead">2026-10-30 核查。GitCode 网页读取受限时，通过本地 Git 对象读取已核实远端 HEAD 的同一提交；本页不修改这些源码树。</p>
+<div class="table"><table><thead><tr><th>对象</th><th>固定版本 / 事实</th></tr></thead><tbody><tr><td>ADX Rust 主线</td><td><code>a88659db6779538fba5337025c8bc09f530b044d</code>；本页编写时以 <code>git ls-remote upstream refs/heads/master</code> 再次核对一致。Agent 层含 Template / Binding / Activator；没有采用旧版 Python FaaS Executor API。</td></tr><tr><td>Ops Lab 现状</td><td><code>5e0b01389a32480c0a20831aca595631c10f9f4a</code>；常驻 runner、按次 SDK 子进程、单根只读 Observer、真实工程交付链。</td></tr><tr><td>Swarm / Core 锁定</td><td>Swarm <code>32d75d7d3a0b466412ee64d77c29460297515119</code>；Core <code>e089198835426cd7681761b0cc278670cd83031f</code>。沿用本项目 framework.lock；本设计不升级依赖。</td></tr></tbody></table></div>
+<ol class="source-list">
+<li id="src-adx-agent"><strong>A1 · 官方 Agent 模型、模板启动、生命周期、挂载和受管 HTTP。</strong> <a href="https://gitcode.com/openJiuwen/agent-dx/blob/a88659db6779538fba5337025c8bc09f530b044d/agent/README.md">agent/README.md</a>：15–25 行为 Binding / Harness 边界；39–75 行为暂停、受管卷和参数；213–232 行为受管访问与平台凭据移除。</li>
+<li><strong>A2 · 激活实际实现。</strong> <a href="https://gitcode.com/openJiuwen/agent-dx/blob/a88659db6779538fba5337025c8bc09f530b044d/agent/activator/src/lib.rs">agent/activator/src/lib.rs</a>：450–541 行为绑定落库、current Environment 激活与状态校验；<a href="https://gitcode.com/openJiuwen/agent-dx/blob/a88659db6779538fba5337025c8bc09f530b044d/agent/activator/src/creation.rs">creation.rs</a>：64–107、189–204 行为同 Environment 查询、创建与结果未知。</li>
+<li><strong>A3 · 平台空闲与恢复条件。</strong> <a href="https://gitcode.com/openJiuwen/agent-dx/blob/a88659db6779538fba5337025c8bc09f530b044d/docs/testing/node-lifecycle.md">docs/testing/node-lifecycle.md</a>：7–11 行区分客户端活动、Relay 流与后台进程；恢复依赖运行后端与 Checkpoint 实际能力。</li>
+<li><strong>A4 · 单机角色与公开 SDK。</strong> <a href="https://gitcode.com/openJiuwen/agent-dx/blob/a88659db6779538fba5337025c8bc09f530b044d/README.zh.md">README.zh.md</a>；<a href="https://gitcode.com/openJiuwen/agent-dx/blob/a88659db6779538fba5337025c8bc09f530b044d/agent/cli/README.md">Agent CLI</a>。用于核对 standalone 角色和模板版本发布规则，不是本 VM 已安装证明。</li>
+<li id="src-sdk"><strong>J1 · 官方 SDK 的本地子进程。</strong> <a href="https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/sdks/python/src/jiuwenswarm_sdk/client.py#L88">Client.run()</a> 与 <a href="https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/sdks/python/src/jiuwenswarm_sdk/client.py#L160">create_subprocess_exec</a>：一调用一官方进程；host tool 回调使用同一子进程 JSONL 管道。</li>
+<li><strong>J2 · 真实 Session 复用边界。</strong> <a href="https://github.com/openJiuwen-ai/jiuwenswarm/blob/32d75d7d3a0b466412ee64d77c29460297515119/jiuwenswarm/channels/process_cli/protocol/model.py#L366">OneShotRunInput</a>：session_id 请求复用 Session 身份与已有持久状态，不等于恢复任意中断进程。</li>
+<li id="src-runner"><strong>R1 · 本项目现有执行和状态。</strong> <a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/lab/runner.py">lab/runner.py</a>；<a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/lab/control.py#L183">control.claim()</a>；<a href="https://github.com/lelezi257/jiuwen-ops-lab/blob/5e0b01389a32480c0a20831aca595631c10f9f4a/lab/native_observer.py#L25">固定记录根与 TrajectoryHost</a>。</li>
+</ol>
+<p class="small">原 D1 文档仍在 <a href="design.html">现有产品最初设计快照</a>；实际运行和验收见 <a href="STATUS.md">STATUS</a>、<a href="OPERATOR-EXPERIENCE-ACCEPTANCE.md">操作与原生观测验收</a>。D2 描述未来接入 ADX 的变化，不覆盖或重写历史验收结论。</p>
+</section>
+</main></div>
+<footer>设计产物 D2 · 自包含 HTML，无 CDN、无外部脚本；可本地打开或打印。所有执行接口示例仅作设计，不会连接运行系统。</footer>
+<script>
+const stages=[
+ {title:'1．实际 500 告警先归到一个事件',text:'控制器识别服务、环境与故障 release；重复告警追加到已有事件，不重复申请 Agent。',who:'订单请求 → 监控 → control.create_case()',proof:'真实告警、业务检测、故障 release / source；此时还没有 SDK Session。',ui:'业务异常；事件等待分配执行资源。不是“Agent 已开始调查”。'},
+ {title:'2．为这个事件选一个稳定的承载地址',text:'控制器为 case-123 选择 ops-case-123-e1，登记模板数字版本和待投递 attempt。以后修复与复核都访问这个 Binding。',who:'control 调度模块 → 持久待投递记录 → ADX Gateway',proof:'case / Binding 选择 / attempt / phase；尚未接收时没有虚构 Session。',ui:'等待执行资源，或等待已有承载就绪。'},
+ {title:'3．ADX 第一次访问时才启动沙箱',text:'Activator 保存或复用 Binding，Platform 安排节点，sandboxd 创建环境，Execd 按镜像入口启动我们的服务。网关通过 Relay 转发请求。',who:'Gateway → Activator / Platform → adxlet → sandboxd → Execd',proof:'真实 Environment 身份、实际路由、业务 /ready；超时查询原身份。',ui:'沙箱启动中 → 执行服务就绪；不等同业务健康。'},
+ {title:'4．沙箱内才开始真正的 SDK 与模型执行',text:'执行服务持久接收 attempt，调用官方 Process SDK。Swarm / Core 与真实模型决定工具调用，SDK 回调经受限工具代理访问证据和工程服务。',who:'执行服务 → Process SDK → CLI / Swarm / Core → 模型；回调 → 工具',proof:'真实 SDK SessionID、模型和工具事件、测试、PR、官方回执；各自身份可对应。',ui:'Agent 正在调查与修复；原版轨迹显示这个真实修复 Session。'},
+ {title:'5．SDK 修复结束，平台等待 CI 与发布',text:'控制器按现有规则检查真实 PR / CI、合并、构建和 digest 发布。沙箱首版保留，但此时没有模型执行。',who:'control / delivery ↔ GitHub Actions → Registry → 订单 API',proof:'候选 SHA / merge SHA / CI run / image digest / 发布回执。',ui:'等待 CI、构建或发布；这些只出现在平台进度，不伪造成 Core Span。'},
+ {title:'6．同一承载收到发布后的只读复核',text:'probe 先完成真实 HTTP / 金额 / 数据库恢复验证；控制器再向同一 Binding 提交 verify attempt，创建新的真实 SDK Session，工具代理禁止写入。',who:'probe → control → 同一 Binding → SDK verify → control',proof:'独立恢复报告 + S-verify；与 S-repair 保留各自真实 Session 身份。',ui:'业务已恢复 / Agent 复核中分开展示；观测页自动接到新阶段。'},
+ {title:'7．先证明记录可回看，再释放沙箱',text:'确认 SDK 子进程退出、结果持久化、轨迹终态可读，写入清理意图，再通过 ADX 删除活动 Binding。业务事件和目录保留。',who:'control → 只读 Observer 核查 → ADX Binding 删除 → 清理对账',proof:'真实删除确认、原生历史可读、case / attempt / Session 及承载历史仍在。',ui:'RESOLVED_FIXED；执行资源已释放。原生历史不需要 Agent 存活。'},
+ {title:'8．新请求先判断业务归属，再判断执行承载',text:'活动事件复用原 Binding；新故障创建新 case / Binding；结案后显式重开创建 e2。已有 Session 只在明确继续原对话且状态完整时复用。',who:'入口 → control 归并 / 重开 → 选择既有或新 Binding',proof:'新的承载轮次不改写 e1 历史；旧写者退出未确认则不能接管同目录。',ui:'事件历史连贯，真实 SDK Session 和实际运行环境分别展示。'}
+];
+function selectStage(index){const s=stages[index],panel=document.querySelector('#stage');panel.replaceChildren();const h=document.createElement('h3');h.textContent=s.title;const p=document.createElement('p');p.textContent=s.text;const dl=document.createElement('dl');for(const [label,value] of [['交互',s.who],['保留证据',s.proof],['页面解释',s.ui]]){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;dl.append(dt,dd)}panel.append(h,p,dl);for(const b of document.querySelectorAll('[data-step]'))b.setAttribute('aria-pressed',String(Number(b.dataset.step)===index))}
+for(const b of document.querySelectorAll('[data-step]'))b.addEventListener('click',()=>selectStage(Number(b.dataset.step)));
+document.querySelector('#print').addEventListener('click',()=>window.print());
+const links=[...document.querySelectorAll('aside a')];if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(visible)for(const a of links)a.classList.toggle('active',a.hash==='#'+visible.target.id)},{rootMargin:'-8% 0px -65% 0px',threshold:0});document.querySelectorAll('main section').forEach(s=>observer.observe(s))}
+</script>
+</body>
+</html>

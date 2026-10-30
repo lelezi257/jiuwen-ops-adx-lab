@@ -1,0 +1,17 @@
+global:
+  resolve_timeout: 30s
+route:
+  receiver: ops-control
+  group_by: [alertname, service, release_id]
+  group_wait: 5s
+  group_interval: 30s
+  repeat_interval: 10m
+receivers:
+  - name: ops-control
+    webhook_configs:
+      - url: http://control:8080/alerts
+        send_resolved: false
+        http_config:
+          authorization:
+            type: Bearer
+            credentials_file: /run/secrets/control_token

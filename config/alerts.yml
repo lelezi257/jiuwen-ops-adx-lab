@@ -1,0 +1,10 @@
+groups:
+  - name: orders
+    rules:
+      - alert: OrderNoCouponErrors
+        expr: sum by (release_id) (increase(order_requests_total{path="/orders",status="500"}[1m])) > 5
+        for: 15s
+        labels:
+          service: order-api
+        annotations:
+          summary: Order creation has real HTTP 500 errors

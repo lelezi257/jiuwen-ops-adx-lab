@@ -1,0 +1,58 @@
+{
+  "minimumLimaVersion": "2.1.0",
+  "vmType": "vz",
+  "arch": "aarch64",
+  "cpus": 4,
+  "memory": "8GiB",
+  "disk": "40GiB",
+  "images": [
+    {
+      "location": "https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-arm64.img",
+      "arch": "aarch64"
+    }
+  ],
+  "mounts": [],
+  "containerd": {
+    "system": false,
+    "user": false
+  },
+  "ssh": {
+    "loadDotSSHPubKeys": false,
+    "forwardAgent": false
+  },
+  "portForwards": [
+    {
+      "guestPort": 19780,
+      "hostPort": 19780,
+      "hostIP": "127.0.0.1"
+    },
+    {
+      "guestPort": 19781,
+      "hostPort": 19781,
+      "hostIP": "127.0.0.1"
+    },
+    {
+      "guestPort": 19080,
+      "hostPort": 19080,
+      "hostIP": "127.0.0.1"
+    },
+    {
+      "guestPort": 19443,
+      "hostPort": 19443,
+      "hostIP": "127.0.0.1"
+    },
+    {
+      "guestPortRange": [
+        1,
+        65535
+      ],
+      "ignore": true
+    }
+  ],
+  "provision": [
+    {
+      "mode": "system",
+      "script": "#!/bin/bash\nset -euo pipefail\nexport DEBIAN_FRONTEND=noninteractive\napt-get -o Acquire::Retries=2 update\napt-get install -y docker.io docker-compose-v2 git python3 python3-venv curl ca-certificates\ninstall -d -m 0755 /etc/docker\ncat > /etc/docker/daemon.json <<'CONF'\n{\"log-driver\":\"json-file\",\"log-opts\":{\"max-size\":\"10m\",\"max-file\":\"3\"},\"builder\":{\"gc\":{\"enabled\":true,\"defaultKeepStorage\":\"6GB\"}}}\nCONF\nsystemctl enable docker\nsystemctl restart docker\n\nprintf jiuwen-ops-adx-lab > /etc/jiuwen-ops-adx-lab-owner\n"
+    }
+  ]
+}

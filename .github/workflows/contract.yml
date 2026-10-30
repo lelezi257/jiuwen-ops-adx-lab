@@ -1,0 +1,31 @@
+name: Trusted contract
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, lab-live]
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: candidate
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: trusted
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+      - name: Trusted HTTP / database contract and candidate regression tests
+        run: python3 trusted/scripts/ci.py --candidate candidate --trusted trusted
+      - name: Product boundary tests (trusted source)
+        run: |
+          python3 -m venv /tmp/ops-test
+          /tmp/ops-test/bin/pip install -r trusted/requirements.txt
+          cd trusted
+          /tmp/ops-test/bin/python -m unittest discover -s tests/product -v

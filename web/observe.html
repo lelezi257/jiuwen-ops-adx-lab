@@ -1,0 +1,72 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>事件持续观测 · 九问原版轨迹</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#173449;background:#eef4f5;font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}header{padding:12px 20px;border-bottom:1px solid #cadde3;background:#fff}h1{font-size:19px;margin:0 0 8px}p{margin:6px 0}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}select,button,a{font:inherit}select,button{max-width:100%;padding:7px 10px;border:1px solid #a9c3cc;border-radius:6px;background:white;color:#173449}button{cursor:pointer}#follow{background:#236977;color:white}small,.muted{color:#627b89}#progress{font-weight:650;color:#225c70}#identity{font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere}#notice{color:#8b5a17}#trail{display:flex;gap:5px;flex-wrap:wrap}#trail button.active{border-color:#287d86;background:#e4f3ef}iframe[hidden]{display:none}iframe{display:block;width:100%;height:calc(100dvh - var(--head,205px));border:0;background:white}.empty{padding:50px;text-align:center}#empty{display:none}a{color:#216d94}details{margin-top:5px}summary{cursor:pointer}
+</style><header id="header"><div class="row"><h1>事件持续观测</h1><span class="muted">跟随栏由 Ops Lab 提供 · 下方嵌入未修改的九问原版 WebUI</span></div>
+<div class="row"><label for="cases">运维事件</label><select id="cases" aria-label="选择运维事件"></select><button id="follow">正在跟随最新阶段</button><a id="workbench" target="_blank" rel="noopener">回运维工作台</a><a id="direct" target="_blank" rel="noopener">单独打开当前原生 Session</a></div>
+<p id="progress" role="status">正在读取事件…</p><p id="notice" role="status"></p><div id="trail" aria-label="真实执行阶段"></div><p id="identity"></p>
+<details><summary>两个界面的分工与跟随方式</summary><small>此栏显示平台处理状态和真实 case / attempt / SessionID。等待 CI、构建和发布时保留上一轮原生轨迹；新 SDK 执行开始后切换到它自己的 Session。选择历史阶段会暂停自动切换，点击“继续跟随”恢复。原生轨迹来自官方 Core 记录，平台事件不转换成 Span。</small></details></header>
+<div id="empty" class="empty">等待该事件创建真实 SDK Session。后台会正常推进，无须重复打开页面。</div><iframe id="native" title="九问原版 WebUI · 真实 Session 轨迹" hidden></iframe>
+<script>
+const $=s=>document.querySelector(s),frame=$('#native');
+const labels={REPAIR_QUEUED:'等待九问开始调查',REPAIRING:'九问正在调查与修复',CI_PENDING:'Agent 已提交 PR，等待 GitHub CI 检查',READY_TO_MERGE:'等待交付授权',MERGING:'平台正在合并已验证的 PR',BUILDING:'平台正在构建发布镜像',DEPLOYING:'平台正在发布新版本',VERIFYING:'独立组件正在验证真实下单、金额和数据库',VERIFY_AGENT_QUEUED:'业务验证已通过，等待九问开始发布后复核',VERIFY_AGENT_RUNNING:'九问正在进行发布后复核',RESOLVED_FIXED:'代码修复、发布与独立验证完成，事件已恢复',RECOVERED_ROLLBACK:'已回滚恢复，保留本轮执行记录',NEEDS_HUMAN:'需要人工处理，请回工作台查看原因',CANCELLED:'事件已停止，已有轨迹保留',TRACE_PROBE_RUNNING:'九问正在进行只读轨迹探针',TRACE_PROBE_COMPLETED:'只读探针已结束'};
+const phases={repair:'调查与修复',verify:'发布后复核',trace_probe:'只读探针'};
+let caseId=new URL(location.href).searchParams.get('case'),experimentId=new URL(location.href).searchParams.get('experiment'),navigationEpoch=0,following=true,shownSid=null,requestedSid=null,loaded=false,loading=false,seenCases=new Set(),newCases=new Set(),allCases=[];
+const url=new URL(location.href);url.port='19780';url.pathname='/';url.search='';$('#workbench').href=url.href;
+function node(tag,text){const n=document.createElement(tag);n.textContent=text;return n}
+function resize(){document.documentElement.style.setProperty('--head',$('#header').offsetHeight+'px')}
+new ResizeObserver(resize).observe($('#header'));
+function pause(reason){navigationEpoch++;following=false;$('#follow').textContent='继续跟随最新阶段';$('#notice').textContent=reason||'正在回看历史，后续执行不会抢走当前页面。'}
+function identity(c,run){const box=$('#identity');box.dataset.caseId=c?.id||'';box.dataset.attemptId=run?.attempt_id||'';box.dataset.sessionId=shownSid||'';box.dataset.following=String(following);box.textContent='case '+(c?.id||'—')+' · attempt '+(run?.attempt_id||'等待创建')+' · Session '+(shownSid||'等待创建')}
+async function show(c,run){
+ if(!run)return;
+ if(shownSid===run.session_id)return;
+ const epoch=navigationEpoch;
+ try{
+  const r=await fetch('/api/ops/session-ready/'+encodeURIComponent(run.session_id));if(!r.ok)throw Error('无法确认原生会话是否就绪');const ready=await r.json();
+  if(epoch!==navigationEpoch||c.id!==caseId)return;
+  if(!ready.ready){$('#notice').textContent='新的 SDK 任务已开始，等待其真实会话记录落盘…';return}
+  requestedSid=run.session_id;shownSid=run.session_id;loaded=false;if(following)$('#notice').textContent='';frame.src='/chat/'+encodeURIComponent(shownSid);frame.hidden=false;$('#empty').style.display='none';
+  $('#direct').href=frame.src;identity(c,run);
+ }catch(e){$('#notice').textContent=e.message+'，将继续读取，现有轨迹保留。'}
+}
+frame.addEventListener('load',()=>{
+ loaded=true;let opened=false,expanded=false,composerHandled=false;const expected=requestedSid;let count=0;
+ const timer=setInterval(()=>{
+  if(expected!==requestedSid||++count>100){clearInterval(timer);return}
+  try{
+   const d=frame.contentDocument;if(!d)return;
+   const toggle=d.querySelector('[data-testid="chat-panel-header-diagnosis-toggle"]');
+   if(toggle&&!opened){if(toggle.getAttribute('aria-pressed')!=='true')toggle.click();opened=true}
+   if(opened&&!composerHandled){const composer=d.querySelector('[data-testid="chat-panel-header-composer-toggle"]');if(composer){if(composer.getAttribute('aria-expanded')==='true')composer.click();composerHandled=true}}
+   const lane=d.querySelector('button[aria-label*=" traces, "][aria-expanded="false"]');
+   if(opened&&lane&&!expanded){lane.click();expanded=true}
+   if(expanded&&composerHandled)clearInterval(timer)
+  }catch(e){clearInterval(timer);$('#notice').textContent='可在下方原生页面手动打开“轨迹分析”。'}
+ },250);
+});
+$('#follow').onclick=()=>{navigationEpoch++;following=true;$('#follow').textContent='正在跟随最新阶段';$('#notice').textContent='';refresh()};
+$('#cases').onchange=()=>{navigationEpoch++;experimentId=null;caseId=$('#cases').value;following=true;shownSid=null;requestedSid=null;loaded=false;frame.hidden=true;$('#empty').style.display='block';newCases.delete(caseId);const u=new URL(location.href);u.searchParams.delete('experiment');u.searchParams.set('case',caseId);history.replaceState(null,'',u);$('#follow').textContent='正在跟随最新阶段';refresh()};
+let refreshing=false;
+async function refresh(){
+ if(refreshing)return;refreshing=true;
+ try{
+  const r=await fetch('/api/ops/state');if(!r.ok)throw Error('事件状态读取失败，原生轨迹保留');const data=await r.json();allCases=data.cases;
+  if(!caseId&&experimentId)caseId=data.experiments.find(e=>e.id===experimentId)?.case_id||null;
+  if(!caseId&&!experimentId&&allCases.length)caseId=allCases[0].id;
+  for(const c of allCases)if(seenCases.size&&!seenCases.has(c.id)&&c.id!==caseId)newCases.add(c.id);
+  seenCases=new Set(allCases.map(c=>c.id));
+  const select=$('#cases');const signature=JSON.stringify([caseId,allCases.map(c=>[c.id,c.state,newCases.has(c.id)])]);if(select.dataset.signature!==signature&&document.activeElement!==select){select.replaceChildren();if(!caseId&&experimentId){const wait=node('option','本轮等待真实告警创建事件');wait.value='';select.append(wait)}for(const c of allCases){const option=node('option',(newCases.has(c.id)?'● 新事件 · ':'')+c.id+' · '+(labels[c.state]||c.state));option.value=c.id;select.append(option)}select.dataset.signature=signature}if(document.activeElement!==select)select.value=caseId||'';
+  const c=allCases.find(c=>c.id===caseId);if(!c){const op=data.operations.find(o=>o.experiment_id===experimentId);$('#progress').textContent=experimentId?(op?.action==='baseline'?'本轮正在进行或已完成基线验证，等待制造故障':'等待故障检测和真实告警创建事件'):'选择一个实际运维事件开始观测';$('#empty').style.display='block';$('#identity').textContent=experimentId?'实验轮次 '+experimentId+' · 尚未创建 SDK Session':'';return}
+  const runs=Object.values(c.sdk_runs||{});const current=runs.find(x=>x.session_id===shownSid);
+  // A navigation initiated inside the native page is a deliberate history view.
+  if(loaded&&following&&requestedSid){const actual=frame.contentWindow.location.pathname;if(actual!=='/chat/'+encodeURIComponent(requestedSid)){pause('已暂停自动跟随：你正在原生页面查看其他会话。');shownSid=actual.startsWith('/chat/')?decodeURIComponent(actual.slice(6)):null}}
+  $('#progress').textContent=(following?'跟随中 · ':'历史查看 · ')+(labels[c.state]||c.state)+(newCases.size?' · 有 '+newCases.size+' 个新事件，可从上方选择':'');
+  $('#trail').replaceChildren();for(const run of runs){const b=node('button',(phases[run.phase]||run.phase)+' · '+run.attempt_id.slice(-6));b.className=run.session_id===shownSid?'active':'';b.title=run.attempt_id+' / '+run.session_id;b.onclick=()=>{pause();show(c,run)};$('#trail').append(b)}
+  identity(c,current);
+  if(following&&runs.length)await show(c,runs[runs.length-1]);
+  if(!runs.length){frame.hidden=true;$('#empty').style.display='block'}
+  if(!following&&shownSid&&!current){const owner=allCases.find(x=>Object.values(x.sdk_runs||{}).some(y=>y.session_id===shownSid));$('#identity').textContent+=' · 当前原生会话所属事件：'+(owner?.id||'不在所选事件记录中')}
+ }catch(e){$('#notice').textContent=e.message}finally{refreshing=false;resize()}
+}
+refresh();setInterval(refresh,1500);
+</script></html>

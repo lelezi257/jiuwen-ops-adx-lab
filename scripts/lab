@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+command_name="${1:-help}"
+shift || true
+compose() { docker compose --env-file .local/lab.env --env-file .local/runtime.env "$@"; }
+case "$command_name" in
+ init) python3 scripts/init_local.py "$@" ;;
+ vm-create) exec python3 scripts/vm.py ;;
+ vm-sync)
+  # Only source + explicit configuration; never copy venvs, evidence or VM state.
+  COPYFILE_DISABLE=1 tar --no-xattrs --exclude=.git --exclude=vendor --exclude=__pycache__ --exclude=.local -czf .local/sync.tar.gz .
+  COPYFILE_DISABLE=1 tar --no-xattrs -czf .local/config-sync.tar.gz .local/model.env .local/lab.env .local/secrets .local/swarm
+  limactl shell jiuwen-ops-adx-lab -- mkdir -p jiuwen-ops-adx-lab/scripts
+  limactl copy scripts/sync_guard.py jiuwen-ops-adx-lab:jiuwen-ops-adx-lab/scripts/sync_guard.py
+  limactl copy .local/sync.tar.gz jiuwen-ops-adx-lab:jiuwen-ops-adx-lab/source.tar.gz
+  limactl copy .local/config-sync.tar.gz jiuwen-ops-adx-lab:jiuwen-ops-adx-lab/config.tar.gz
+  limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && python3 scripts/sync_guard.py config.tar.gz && tar -xzf source.tar.gz && tar -xzf config.tar.gz && rm source.tar.gz config.tar.gz && chmod 700 .local .local/secrets && chmod 600 .local/secrets/* .local/model.env && chmod 644 .local/secrets/db_password .local/secrets/verify_db_password && python3 scripts/runtime_env.py '"$(git rev-parse HEAD)"
+
+  ;;
+ vm-up) exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,NO_PROXY,http_proxy,https_proxy,no_proxy ./scripts/lab up' ;;
+ vm-status) exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && sudo ./scripts/lab status' ;;
+ up)
+  test -f .local/runtime.env || { echo 'Run scripts/lab init and set HOST_REPO / LAB_TRUST_SHA in .local/runtime.env'; exit 1; }
+  if [[ -f /etc/jiuwen-ops-adx-lab-owner ]]; then python3 scripts/configure_guest_proxy.py; fi
+  if ! grep -q '^ORDER_IMAGE=' .local/runtime.env; then python3 scripts/build_baseline.py; fi
+  compose build control runner
+  compose build native-web
+  compose up -d --no-build
+  # File bind mounts retain old inodes; recreate config-driven services on up.
+  compose up -d --no-build --no-deps --force-recreate prometheus alertmanager loki
+  if ! grep -q '^ORDER_IMAGE=' .local/runtime.env; then ./scripts/lab bootstrap-image; else docker start ops-adx-order-api >/dev/null; fi
+  python3 scripts/wait_ready.py
+  ;;
+ bootstrap-image) exec python3 scripts/bootstrap_image.py ;;
+
+ status) compose ps ;;
+ logs) compose logs --tail=80 "$@" ;;
+ configure-model)
+  # On Mac, sync only the model file; never overwrite VM action state or credentials.
+  if [[ "$(uname)" == Darwin ]]; then
+   limactl copy .local/model.env jiuwen-ops-adx-lab:jiuwen-ops-adx-lab/.local/model.env
+   exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && chmod 600 .local/model.env && sudo ./scripts/lab configure-model'
+  fi
+  compose up -d --no-deps --force-recreate runner
+  ;;
+ qualify)
+  if [[ "$(uname)" == Darwin ]]; then
+   exec limactl shell jiuwen-ops-adx-lab -- bash -lc 'cd ~/jiuwen-ops-adx-lab && sudo ./scripts/lab qualify'
+  fi
+  compose exec -T runner python /app/scripts/qualify_jiuwen.py --lifecycle
+  ;;
+ token) cat .local/secrets/control_token ;;
+ baseline|fault|investigate|trace-probe)
+  exec python3 scripts/api.py "$command_name" ;;
+ agent-acceptance) exec python3 scripts/agent_acceptance.py "$@" ;;
+ smoke) exec python3 scripts/smoke.py "$@" ;;
+ stop) compose stop
+  docker stop ops-adx-order-api
+  ;;
+ *) printf '%s\n' 'init [--github] | vm-create | vm-sync | vm-up | vm-status | up | status | configure-model | qualify | token | baseline | fault | investigate | agent-acceptance [--trials 3] | smoke | logs | stop' ;;
+esac

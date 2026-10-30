@@ -1,0 +1,58 @@
+name: Build order
+run-name: Build order ${{ inputs.source_sha }}
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact verified merge source SHA
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - name: Validate source identity
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: '[[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: candidate
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: trusted
+          persist-credentials: false
+      - name: Recheck actual merged code
+        run: python3 trusted/scripts/ci.py --candidate candidate --trusted trusted
+      - name: Build immutable source artifact
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          docker build -f trusted/deploy/Order.Dockerfile --build-arg SOURCE_SHA="$SOURCE_SHA" -t "order-build:$SOURCE_SHA" candidate
+          mkdir artifact
+          docker save "order-build:$SOURCE_SHA" -o artifact/image.tar
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          p=Path('artifact/image.tar')
+          Path('artifact/provenance.json').write_text(json.dumps({'source_sha':os.environ['SOURCE_SHA'],'architecture':os.environ['ARCH'],'archive_sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'run_id':os.environ['GITHUB_RUN_ID']}))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: order-${{ matrix.arch }}
+          path: artifact/
+          retention-days: 7

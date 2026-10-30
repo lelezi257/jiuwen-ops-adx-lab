@@ -1,0 +1,22 @@
+{
+  "swarm": {
+    "repository": "https://github.com/openJiuwen-ai/jiuwenswarm",
+    "commit": "32d75d7d3a0b466412ee64d77c29460297515119"
+  },
+  "core": {
+    "repository": "https://github.com/openJiuwen-ai/agent-core",
+    "commit": "e089198835426cd7681761b0cc278670cd83031f"
+  },
+  "protocol": {
+    "repository": "https://github.com/openJiuwen-ai/agent-protocol",
+    "commit": "2a0457e5e01152e9ca5f8afdffd84716227046ca"
+  },
+  "a4p": {
+    "repository": "https://github.com/openJiuwen-ai/agent-protocol",
+    "commit": "1699ea352a08430731c6dddac0fc46a1b1a385f2"
+  },
+  "router": {
+    "repository": "https://github.com/openJiuwen-ai/agent-protocol",
+    "commit": "e83f98f2251e889d1f51a7b631aa675c0e43168d"
+  }
+}
