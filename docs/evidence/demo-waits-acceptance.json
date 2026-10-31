@@ -1,0 +1,250 @@
+{
+  "date": "2026-10-31",
+  "qualification": "Real demo timings; shorter recovery observation is not long-duration reliability acceptance",
+  "case": {
+    "id": "case-6e1c4483f98542e2",
+    "state": "RESOLVED_FIXED",
+    "created_at": 1793407520.5348303,
+    "updated_at": 1793407746.3219538,
+    "execution_binding": {
+      "incarnation": 1,
+      "template": "ops-order",
+      "template_version": "6",
+      "binding_id": "case-6e1c4483f98542e2-e1",
+      "allocation_state": "RELEASED",
+      "recording_root_id": "case-6e1c4483f98542e2",
+      "environment_id": "adx-49b11db9-5e58-4618-b6d8-dcd7dd3439fe",
+      "released_at": 1793407746.3217256
+    },
+    "sdk_runs": {
+      "attempt-23d391243c6e440e": {
+        "attempt_id": "attempt-23d391243c6e440e",
+        "phase": "repair",
+        "session_id": "process_cli_1a18f6b31af_dcf4b01e4c67",
+        "request_id": "fc8ce510-fec2-4f07-acd3-7acb478d2f1a",
+        "started_at": 1793407529.415526,
+        "binding_id": "case-6e1c4483f98542e2-e1",
+        "environment_id": "adx-49b11db9-5e58-4618-b6d8-dcd7dd3439fe"
+      },
+      "attempt-1fc41e5bbec843d6": {
+        "attempt_id": "attempt-1fc41e5bbec843d6",
+        "phase": "verify",
+        "session_id": "process_cli_1a18f6dea80_bcf62ba0783e",
+        "request_id": "3efde374-671e-42da-9e4d-d092e9733424",
+        "started_at": 1793407707.8096628,
+        "binding_id": "case-6e1c4483f98542e2-e1",
+        "environment_id": "adx-49b11db9-5e58-4618-b6d8-dcd7dd3439fe"
+      }
+    },
+    "cleanup": {
+      "state": "CONFIRMED",
+      "confirmed_at": 1793407746.3217278
+    },
+    "pr": {
+      "number": 3,
+      "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/3",
+      "head_sha": "280eac97b5341ba01542480ad49d388effc218f6",
+      "base_sha": "14797f8c98c43e63ff06dc51859971ddad4595b4",
+      "case_id": "case-6e1c4483f98542e2"
+    },
+    "ci": {
+      "state": "passed",
+      "run_id": 41151938525,
+      "run_url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41151938525",
+      "test_merge_sha": "95eb9e64dccf6aaad93eaf19a2871040d93220e8",
+      "pr": {
+        "number": 3,
+        "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/3",
+        "head_sha": "280eac97b5341ba01542480ad49d388effc218f6",
+        "base_sha": "14797f8c98c43e63ff06dc51859971ddad4595b4",
+        "case_id": "case-6e1c4483f98542e2"
+      }
+    },
+    "merge": {
+      "state": "merged",
+      "merge_sha": "69a6a9537792808c71d78f255b47ae5b7da8589f",
+      "pr": {
+        "number": 3,
+        "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/3",
+        "head_sha": "280eac97b5341ba01542480ad49d388effc218f6",
+        "base_sha": "14797f8c98c43e63ff06dc51859971ddad4595b4",
+        "case_id": "case-6e1c4483f98542e2"
+      },
+      "checked": {
+        "state": "passed",
+        "run_id": 41151938525,
+        "run_url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41151938525",
+        "test_merge_sha": "95eb9e64dccf6aaad93eaf19a2871040d93220e8",
+        "pr": {
+          "number": 3,
+          "url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/pull/3",
+          "head_sha": "280eac97b5341ba01542480ad49d388effc218f6",
+          "base_sha": "14797f8c98c43e63ff06dc51859971ddad4595b4",
+          "case_id": "case-6e1c4483f98542e2"
+        }
+      }
+    },
+    "build": {
+      "source_sha": "69a6a9537792808c71d78f255b47ae5b7da8589f",
+      "dispatched_at": 1793407622.5397189,
+      "state": "ready",
+      "run_id": 41152030398,
+      "run_url": "https://github.com/lelezi257/jiuwen-ops-adx-lab/actions/runs/41152030398",
+      "image_digest": "localhost:5000/jiuwen-adx-order@sha256:cbc2d7aedba53a78292349ba7dba7e65c8c5917120caa9d20520bc19df641e0f",
+      "artifact_id": 13023542259,
+      "provenance": {
+        "source_sha": "69a6a9537792808c71d78f255b47ae5b7da8589f",
+        "architecture": "arm64",
+        "archive_sha256": "e690ff411516c7c93a3af2607fd3108545cb37831f285a78060fbfaaa757dd94",
+        "run_id": "41152030398"
+      }
+    }
+  },
+  "timings_seconds": {
+    "click_to_observed_500": 24.87,
+    "observed_500_to_case": 4.45,
+    "case_to_sdk_start": 8.88,
+    "click_to_sdk_start": 38.21,
+    "recovery_verification": 11.07,
+    "click_to_resolved": 254.35
+  },
+  "verification": {
+    "passed": true,
+    "contract": {
+      "seconds": 5,
+      "windows": 2,
+      "minimum_per_path": 3,
+      "mode": "demo_recovery"
+    },
+    "old_order_ok": true,
+    "invalid_input_ok": true,
+    "stable_version": true,
+    "windows": [
+      {
+        "start": 1793407690.846019,
+        "end": 1793407696.3932095,
+        "counts": {
+          "coupon": 10,
+          "no_coupon": 10
+        },
+        "passed": true,
+        "failed_requests": 0,
+        "sql_rows_match": true
+      },
+      {
+        "start": 1793407696.3932111,
+        "end": 1793407701.8943596,
+        "counts": {
+          "coupon": 10,
+          "no_coupon": 10
+        },
+        "passed": true,
+        "failed_requests": 0,
+        "sql_rows_match": true
+      }
+    ]
+  },
+  "sdk_receipts": [
+    {
+      "session_id": "process_cli_1a18f6b31af_dcf4b01e4c67",
+      "status": "completed",
+      "exit_code": 0,
+      "usage": {
+        "input_tokens": 213560,
+        "output_tokens": 1853,
+        "total_tokens": 215413,
+        "cache_tokens": 189184,
+        "cache_hit_rate": "88.6%",
+        "total_cost": 0.060316,
+        "model_calls": 9
+      }
+    },
+    {
+      "session_id": "process_cli_1a18f6dea80_bcf62ba0783e",
+      "status": "completed",
+      "exit_code": 0,
+      "usage": {
+        "input_tokens": 45470,
+        "output_tokens": 3508,
+        "total_tokens": 48978,
+        "cache_tokens": 19584,
+        "cache_hit_rate": "43.1%",
+        "total_cost": 0.013714,
+        "model_calls": 2
+      }
+    }
+  ],
+  "stages": [
+    {
+      "time": 1793407520.535083,
+      "state": "REPAIR_QUEUED"
+    },
+    {
+      "time": 1793407520.8194494,
+      "state": "REPAIR_STARTING"
+    },
+    {
+      "time": 1793407529.4121716,
+      "state": "REPAIRING"
+    },
+    {
+      "time": 1793407579.7949805,
+      "state": "CI_PENDING"
+    },
+    {
+      "time": 1793407609.4705336,
+      "state": "READY_TO_MERGE"
+    },
+    {
+      "time": 1793407610.6055238,
+      "state": "MERGING"
+    },
+    {
+      "time": 1793407619.1618228,
+      "state": "BUILDING"
+    },
+    {
+      "time": 1793407687.070715,
+      "state": "DEPLOYING"
+    },
+    {
+      "time": 1793407689.692343,
+      "state": "VERIFYING"
+    },
+    {
+      "time": 1793407701.9109156,
+      "state": "VERIFY_AGENT_QUEUED"
+    },
+    {
+      "time": 1793407701.9532077,
+      "state": "VERIFY_STARTING"
+    },
+    {
+      "time": 1793407707.806973,
+      "state": "VERIFY_AGENT_RUNNING"
+    },
+    {
+      "time": 1793407745.5585456,
+      "state": "RESOLVED_FIXED"
+    }
+  ],
+  "native_recordings_after_release": {
+    "ready": true,
+    "sessions": [
+      {
+        "session_id": "process_cli_1a18f6b31af_dcf4b01e4c67",
+        "metadata": true,
+        "subjects": 1,
+        "revision": 71,
+        "store_epoch": "74a393a2fc5b4b60905f352aa3d5bd91"
+      },
+      {
+        "session_id": "process_cli_1a18f6dea80_bcf62ba0783e",
+        "metadata": true,
+        "subjects": 1,
+        "revision": 20,
+        "store_epoch": "9a22f2fc13674ee498d4200b2bd6454e"
+      }
+    ]
+  }
+}
