@@ -69,5 +69,5 @@ async function refresh(){
   if(!following&&shownSid&&!current){const owner=allCases.find(x=>Object.values(x.sdk_runs||{}).some(y=>y.session_id===shownSid));$('#identity').textContent+=' · 当前原生会话所属事件：'+(owner?.id||'不在所选事件记录中')}
  }catch(e){$('#notice').textContent=e.message}finally{refreshing=false;resize()}
 }
-refresh();setInterval(refresh,1500);
+refresh();setInterval(refresh,750);
 </script></html>

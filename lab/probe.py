@@ -73,10 +73,12 @@ def verify(args:dict):
 def baseline(args:dict):
  return verify_contract(args,quick_baseline=True)
 def verify_contract(args:dict,quick_baseline=False):
- seconds=int(os.getenv('LAB_VERIFY_SECONDS','60'));windows=int(os.getenv('LAB_VERIFY_WINDOWS','2'));minimum=int(os.getenv('LAB_VERIFY_MIN_REQUESTS','30'))
+ seconds=int(os.getenv('LAB_VERIFY_SECONDS','5'));windows=int(os.getenv('LAB_VERIFY_WINDOWS','2'));minimum=int(os.getenv('LAB_VERIFY_MIN_REQUESTS','3'))
  if quick_baseline:seconds,windows,minimum=0,1,2
+ elif min(seconds,windows,minimum)<1:raise ValueError('Recovery verification requires positive windows, duration and sample minimum')
  # No caller-supplied shortcuts to the trusted recovery contract.
  report={'verification_id':ident('verify'),'release_id':args['release_id'],'expected_source_sha':args['source_sha'],'expected_image_digest':args['image_digest'],'started_at':time.time(),'windows':[],'passed':True,'contract':{'seconds':seconds,'windows':windows,'minimum_per_path':minimum}}
+ report['contract']['mode']='demo_recovery' if seconds<60 or windows<2 or minimum<30 else 'extended_recovery'
  if quick_baseline:report['contract'].update(mode='quick_baseline',rounds=2)
  key=args.get('progress_key') or report['verification_id']
  def publish(window,rows):

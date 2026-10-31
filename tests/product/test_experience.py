@@ -82,3 +82,32 @@ class OperatorEvidenceBoundaries(unittest.TestCase):
   args={'quick_baseline':True,'seconds':0,'windows':1}
   with patch('lab.probe.verify_contract',return_value={}) as contract:
    probe.verify(args);contract.assert_called_once_with(args)
+
+ def test_demo_recovery_still_requires_each_window_samples_and_identity(self):
+  from lab import probe
+  from unittest.mock import MagicMock
+  version={'release_id':'r','source_sha':'a','image_digest':'d'}
+  for failure in (None,'http','sample_minimum','release'):
+   clock=[0.0];client=MagicMock()
+   client.get.return_value.status_code=200
+   actual={**version,'release_id':'other'} if failure=='release' else version
+   client.get.return_value.json.side_effect=lambda:actual if client.get.call_args.args[0].endswith('/version') else {'total_cents':20000}
+   client.post.return_value.status_code=422
+   def sampled(coupon):
+    clock[0]+=.05
+    return {'path':'coupon' if coupon else 'no_coupon','ok':failure!='http','status':500 if failure=='http' else 200}
+   env={'LAB_VERIFY_SECONDS':'5','LAB_VERIFY_WINDOWS':'2','LAB_VERIFY_MIN_REQUESTS':'100' if failure=='sample_minimum' else '3'}
+   with self.subTest(failure=failure),patch.dict(os.environ,env),patch('lab.probe.httpx.Client') as factory,patch('lab.probe.sample',side_effect=sampled),patch('lab.probe.time.time',side_effect=lambda:clock[0]),patch('lab.probe.time.sleep',side_effect=lambda seconds:clock.__setitem__(0,clock[0]+seconds)):
+    factory.return_value.__enter__.return_value=client
+    common.put('baseline','old_order',{'id':'old','total_cents':20000})
+    report=probe.verify(version)
+    self.assertEqual(report['passed'],failure is None)
+    self.assertEqual(report['contract']['mode'],'demo_recovery')
+    self.assertEqual(len(report['windows']),2)
+    self.assertGreaterEqual(report['finished_at']-report['started_at'],10)
+
+ def test_recovery_cannot_pass_with_empty_or_disabled_windows(self):
+  from lab import probe
+  for field in ('LAB_VERIFY_SECONDS','LAB_VERIFY_WINDOWS','LAB_VERIFY_MIN_REQUESTS'):
+   with self.subTest(field=field),patch.dict(os.environ,{field:'0'}):
+    with self.assertRaises(ValueError):probe.verify({})

@@ -3,8 +3,8 @@ global:
 route:
   receiver: ops-control
   group_by: [alertname, service, release_id]
-  group_wait: 5s
-  group_interval: 30s
+  group_wait: 0s
+  group_interval: 5s
   repeat_interval: 10m
 receivers:
   - name: ops-control

@@ -92,8 +92,8 @@ async def scheduler():
    except Exception as exc:
     event(c['id'],'controller_error',{'message':str(exc)[:1500]})
     if c['state'] in ['MERGING','DEPLOYING','ROLLING_BACK']:save(c,'NEEDS_HUMAN','Action requires reconciliation: '+str(exc)[:600])
-   await asyncio.sleep(.1)
-  await asyncio.sleep(3)
+   await asyncio.sleep(.01)
+  await asyncio.sleep(1)
 @asynccontextmanager
 async def lifespan(app):
  from lab import adx_dispatch

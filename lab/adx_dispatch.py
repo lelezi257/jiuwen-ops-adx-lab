@@ -227,4 +227,4 @@ async def loop():
                     if action:
                         busy.add(case["id"])
                         asyncio.create_task(work(case["id"], action))
-        await asyncio.sleep(2)
+        await asyncio.sleep(.5)

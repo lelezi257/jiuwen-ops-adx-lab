@@ -2,8 +2,9 @@ groups:
   - name: orders
     rules:
       - alert: OrderNoCouponErrors
-        expr: sum by (release_id) (increase(order_requests_total{path="/orders",status="500"}[1m])) > 5
-        for: 15s
+        # Demo: real recurring HTTP failures, with a short confirmation period.
+        expr: sum by (release_id) (increase(order_requests_total{path="/orders",status="500"}[20s])) > 1
+        for: 2s
         labels:
           service: order-api
         annotations:

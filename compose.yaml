@@ -296,9 +296,9 @@
       ],
       "environment": {
         "LAB_DATA": "/data",
-        "LAB_VERIFY_SECONDS": "${LAB_VERIFY_SECONDS:-60}",
+        "LAB_VERIFY_SECONDS": "${LAB_VERIFY_SECONDS:-5}",
         "LAB_VERIFY_WINDOWS": "${LAB_VERIFY_WINDOWS:-2}",
-        "LAB_VERIFY_MIN_REQUESTS": "${LAB_VERIFY_MIN_REQUESTS:-30}"
+        "LAB_VERIFY_MIN_REQUESTS": "${LAB_VERIFY_MIN_REQUESTS:-3}"
       },
       "volumes": [
         "probe:/data"
